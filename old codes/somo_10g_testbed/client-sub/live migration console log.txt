@@ -1,0 +1,72 @@
+wins@blue:~/jaehee/client-sub/SOMOClient/src$ sudo ./countMigrateTime.sh 
+UB limits were set successfully
+Adding IP address(es): 10.32.0.3
+arpsend: 10.32.0.3 is detected on another computer : 20:00:00:00:02:02
+vps-net_add WARNING: arpsend -c 1 -w 1 -D -e 10.32.0.3 eth1 FAILED
+CT configuration saved to /etc/vz/conf/101.conf
+Loading /etc/vz/vz.conf
+Locked CT 101
+Starting live migration of CT 101 to 10.32.0.2
+OpenVZ is running...
+Checking for CPT version compatibility
+Checking for CPU flags compatibility
+Loading /etc/vz/conf/101.conf
+Getting remote VE_ROOT and VE_PRIVATE
+Checking if ploop is supported on destination node
+Checking IPs on destination node: 10.48.0.3 10.32.0.3
+Preparing remote node
+Copying config file
+CT configuration saved to /etc/vz/conf/101.conf
+CT configuration saved to /etc/vz/conf/101.conf
+Creating remote container root dir
+Creating remote container private dir
+Syncing private
+Live migrating container...
+Copying top ploop delta with CT suspend
+Trying port 7650
+Sending /var/lib/vz/private/101/root.hdd/root.hdd
+Opening delta /var/lib/vz/private/101/root.hdd/root.hdd
+Setting up checkpoint...
+	set CPU flags..
+	suspend...
+	get context...
+Checkpointing completed successfully
+Dumping container
+Setting up checkpoint...
+join context..
+dump...
+Checkpointing completed successfully
+Copying dumpfile
+Undumping container
+Restoring container ...
+Opening delta /var/lib/vz/private/101/root.hdd/root.hdd
+Adding delta dev=/dev/ploop51803 img=/var/lib/vz/private/101/root.hdd/root.hdd (rw)
+Mounting /dev/ploop51803p1 at /var/lib/vz/root/101 fstype=ext4 data='balloon_ino=12,'
+Container is mounted
+undump...
+Adding IP address(es): 10.48.0.3 10.32.0.3
+Setting CPU units: 1000
+get context...
+Container start in progress...
+Restoring completed successfully
+Resuming container
+Resuming...
+catch!
+
+Suspend + Dump: 0.28
+Pcopy after suspend: 0.60
+Copy dump file: 0.05
+Undump + Resume: 0.99
+------
+Total suspended time: 1.93
+
+Cleaning up
+Killing container
+Killing...
+Unmounting file system at /var/lib/vz/root/101
+Unmounting device /dev/ploop33563
+Container is unmounted
+Removing dumpfiles
+Destroying container
+Destroying container private area: /var/lib/vz/private/101
+Container private area was destroyed

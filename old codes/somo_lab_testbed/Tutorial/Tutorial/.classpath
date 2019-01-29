@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="hamcrest-core-1.1.jar"/>
+	<classpathentry kind="lib" path="jdbm-3.0-alpha.jar"/>
+	<classpathentry kind="lib" path="json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="junit-4.10.jar"/>
+	<classpathentry kind="lib" path="logback-classic-1.0.1.jar"/>
+	<classpathentry kind="lib" path="logback-core-1.0.1.jar"/>
+	<classpathentry kind="lib" path="netty-3.5.3.Patched.jar"/>
+	<classpathentry kind="lib" path="slf4j-api-1.6.4.jar"/>
+	<classpathentry kind="lib" path="TomP2P-4.4-javadoc.jar"/>
+	<classpathentry kind="lib" path="TomP2P-4.4-sources.jar"/>
+	<classpathentry kind="lib" path="TomP2P-4.4.jar"/>
+	<classpathentry kind="lib" path="netty-all-4.1.5.Final.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

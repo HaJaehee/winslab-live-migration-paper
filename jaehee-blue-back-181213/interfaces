@@ -1,0 +1,39 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+
+
+auto eth0
+#iface eth0 inet static
+iface eth0 inet manual
+#        address 192.168.0.23
+#        netmask 255.255.255.0
+#        gateway 192.168.0.1
+#        dns-nameservers 8.8.8.8
+
+auth eth1
+#iface eth1 inet manual
+iface eth1 inet static
+      address 10.48.0.2
+      netmask 255.240.0.0
+      gateway 10.48.0.1
+      hwaddress ether 10:00:00:00:02:01
+      mtu 1400
+
+#auto venet0
+#iface venet0 inet static
+#        mtu 1400
+
+iface br0 inet static
+	address 192.168.0.23
+	network 192.168.0.0
+	netmask 255.255.255.0
+	broadcast 192.168.0.255
+	gateway 192.168.0.1
+	dns-nameservers 8.8.8.8
+	bridge_ports eth0
+	bridge_stp off
+    bridge_fd 0
+    bridge_maxwait 0
+	auto br0
+

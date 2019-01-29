@@ -1,0 +1,10 @@
+<network>
+      <name>default</name>
+        <bridge name="virbr0" />
+          <forward mode="route"/>
+            <ip address="10.48.0.4" netmask="255.0.0.0">
+                    <dhcp>
+                              <range start="10.48.0.100" end="10.48.0.254"/>
+                                  </dhcp>
+                                    </ip>
+                                  </network>

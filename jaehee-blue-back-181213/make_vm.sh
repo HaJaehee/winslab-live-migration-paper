@@ -1,0 +1,11 @@
+virt-install \
+--name template \
+--ram 3072 \
+--disk path=/var/kvm/images/template.img,size=4.5 \
+--vcpus 2 \
+--os-variant ubuntutrusty \
+--network bridge=br0 \
+--graphics none \
+--console pty,target_type=serial \
+--location 'http://kr.archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/' \
+--extra-args 'console=ttyS0,115200n8 serial'
