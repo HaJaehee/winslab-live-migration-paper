@@ -22,12 +22,15 @@
  *
  * Update 2019/01/09
  * 		Update history: LM(2018) > MEC(2019)
- * 			OvS version porting: 2.3.1 > 2.5.6 (Ubuntu Linux 4.4 support)
- * 
+ * 			OvS version porting: 2.3.1 > 2.10.x (Ubuntu Linux 4.15 support)
+ *
  * Update 2019/04/29
  *              Update history: LM(2019)
  *                      Testbed IP revised.
-
+ * 
+ * Update 2019/05/01
+ *              Update history: LM(2019)
+ *                      IPC sending message codes are revised.
  */
 
 
@@ -66,12 +69,6 @@
 #include <linux/inet.h>
 #include <net/tcp.h>
 #include <linux/time.h>
-
-#include <linux/version.h>
-#include <linux/slab.h>
-#include <net/sock.h>
-#include <net/inet_common.h>
-
 #define OVS_MODE_MININET    0
 #define OVS_MODE_TESTBED    1
 // ------------------------------------------------------------
@@ -156,7 +153,7 @@ struct timeval END_TIME;
 struct timeval STAT_TIMES[SWITCH_NUMS];
 uint16_t STAT_NEW_UES[SWITCH_NUMS];
 
-int LOGGING = 0;
+int LOGGING = 1;
 int LOGGING_SEARCH_LATENCY = 0;
 
 static uint8_t sendBuffer[128];
@@ -333,8 +330,12 @@ static void ipc_SendMessage(
 		uint32_t clientIP, uint8_t* data)
 {
 	struct sockaddr_in to;
-	struct msghdr msg;
-	struct iovec iov;
+	struct msghdr msg = {};
+	struct iovec iov = {};
+	unsigned long nr_segments = 1;
+	
+	size_t count = 1;
+	 
 	mm_segment_t oldfs;
 	int len = sizeof(opCode) + sizeof(switchNum);
 
@@ -371,6 +372,7 @@ static void ipc_SendMessage(
 	// Adjust memory boundaries and send the message
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+	iov_iter_init(&msg.msg_iter, READ, &iov, nr_segments, count);
 	len = sock_sendmsg(sendsocket, &msg);
 	set_fs(oldfs);
 }
@@ -1563,7 +1565,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				//not 127.0.0.1 and not this switch's ip
 				dstPortByteArr[1] = dstPort & 0xff;
 				dstPortByteArr[0] = ((dstPort >> 8) & 0xff);
-				if(LOGGING){os_WriteLog1("Cache does not have 'port number' of dest = %u.\n", dstPort);}
+				if(LOGGING){os_WriteLog1("cache does not have 'port number' of dest = %u.\n", dstPort);}
 				// Send a request message to the upper layer
 				if (dstPort > 61000 || dstPort < 32768) {
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
@@ -1705,7 +1707,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM has successfully been loaded. --- \n");
+	os_WriteLog("--- OvS with LM has successfully been loaded. 190501 22:00 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
