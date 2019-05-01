@@ -1,2 +1,2 @@
 #!/bin/bash
-javac -cp .:../* -d . SOMODHTServer.java
+javac -cp .:../* -d . LMDHTServer.java

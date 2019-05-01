@@ -1,0 +1,3 @@
+/home/wins/ovs-branch-2.10/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/wins/ovs-branch-2.10/cmake-build-debug/CMakeFiles/ovs_branch_2_10.dir
+/home/wins/ovs-branch-2.10/cmake-build-debug/CMakeFiles/edit_cache.dir
