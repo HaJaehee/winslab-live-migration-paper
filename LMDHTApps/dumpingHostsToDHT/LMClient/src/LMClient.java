@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.lang.Thread;
 
-public class SOMOClient {
+public class LMClient {
 	
 	public static final String OPCODE_BOOTUP = "00";
     public static final String OPCODE_GET_HASH = "01";

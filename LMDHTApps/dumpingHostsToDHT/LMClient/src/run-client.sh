@@ -1,2 +1,2 @@
 #!/bin/bash
-java -cp .:../* SOMOClient $1
+java -cp .:../* LMClient $1

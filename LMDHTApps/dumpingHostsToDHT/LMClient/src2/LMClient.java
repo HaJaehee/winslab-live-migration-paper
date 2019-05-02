@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class SOMOClient {
+public class LMClient {
 	
 	public static final String OPCODE_BOOTUP = "00";
     public static final String OPCODE_GET_HASH = "01";

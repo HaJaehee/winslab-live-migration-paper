@@ -1,2 +1,2 @@
 #!/bin/bash
-javac -cp .:../* -d . SOMOClient.java
+javac -cp .:../* -d . LMClient.java
