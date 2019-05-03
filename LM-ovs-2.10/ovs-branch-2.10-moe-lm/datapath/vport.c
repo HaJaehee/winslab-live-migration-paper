@@ -37,6 +37,12 @@
  *              Update history: LM(2019)
  *                      IPC sending message codes are revised.
  * 			Excluded case of DHCP port numbers.
+ *
+ * Update 2019/05/03
+ *              Update history: LM(2019)
+ *                      IPC sending message codes are revised.
+ * 			Excluded case of DHCP port numbers.
+ *			IPC sending message codes are working.
  */
 
 
@@ -343,7 +349,7 @@ static void ipc_SendMessage(
 	struct iov_iter msg_iov_iter;
 	unsigned long nr_segments = 1;
  	int result = 0;	
-	size_t count = 1;
+	size_t count = 0;
 	 
 	mm_segment_t oldfs;
 	int len = sizeof(opCode) + sizeof(switchNum);
@@ -367,8 +373,8 @@ static void ipc_SendMessage(
 	to.sin_family = AF_INET;
 	to.sin_addr.s_addr = htonl(INADDR_SEND);
 	to.sin_port = htons(10000 + switchNum);
-	if(LOGGING){os_WriteLog3("Info of the upper layer. AF_INET =%u, s_addr=%u, sin_port=%u.\n", to.sin_family, to.sin_addr.s_addr, 10000+switchNum);}
-	
+	if(LOGGING){os_WriteLog3("Info of the upper layer. AF_INET =%u, s_addr=%u, sin_port=%u.\n", to.sin_family, INADDR_SEND , 10000+switchNum);}
+	if(LOGGING){os_WriteLog3("SendBuffer[0]=%u. SendBuffer[1]=%u, length=%u.\n",sendBuffer[0],sendBuffer[1],len);}	
 	memset(&msg, 0, sizeof(msg));
         memset(&iov, 0, sizeof(iov));
         memset(&msg_iov_iter, 0, sizeof(msg_iov_iter));
@@ -379,13 +385,14 @@ static void ipc_SendMessage(
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
 	msg_iov_iter = msg.msg_iter;
+	count = len;
 	//msg.msg_iov = &iov;
 	//msg.msg_iovlen = 1;
 
+	iov_iter_init(&msg_iov_iter, READ, &iov, nr_segments, count); //Jaehee 190502
 	// Adjust memory boundaries and send the message
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
-	iov_iter_init(&msg_iov_iter, READ, &iov, nr_segments, count); //Jaehee 190502
 	msg.msg_iter = msg_iov_iter;
 	result = sock_sendmsg(sendsocket, &msg);
 	set_fs(oldfs);
