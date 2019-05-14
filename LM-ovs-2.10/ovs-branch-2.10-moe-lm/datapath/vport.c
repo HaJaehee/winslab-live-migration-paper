@@ -18,31 +18,35 @@
 
 /**
  * Update 2018/02/20
- * 		Update history: MoE(2016) > SOMO(2017) > LM(2018) > MEC(2019)
+ * 		Update history: MoE(2016) > SOMO(2017) > LM(2018) > LM-MEC(2019)
  *
  * Update 2019/01/09
- * 		Update history: LM(2018) > MEC(2019)
+ * 		Update history: LM(2018) > LM-MEC(2019)
  * 			OvS version porting: 2.3.1 > 2.10.x (Ubuntu Linux 4.15 support)
  *
  * Update 2019/04/29
- *              Update history: LM(2019)
+ *              Update history: LM-MEC(2019) v1.0
  *                      Testbed IP revised.
  * 
  * Update 2019/05/01
- *              Update history: LM(2019)
+ *              Update history: LM-MEC(2019) v1.1
  *                      IPC sending message codes are revised.
  *                      However, still now works.
  *
  * Update 2019/05/02
- *              Update history: LM(2019)
+ *              Update history: LM-MEC(2019) v1.2
  *                      IPC sending message codes are revised.
  * 			Excluded case of DHCP port numbers.
  *
  * Update 2019/05/03
- *              Update history: LM(2019)
+ *              Update history: LM-MEC(2019) v1.3
  *                      IPC sending message codes are revised.
  * 			Excluded case of DHCP port numbers.
  *			IPC sending message codes are working.
+ *
+ * Update 2019/05/14
+ *              Update history: LM-MEC(2019) v1.3.1
+ *			Added specific cases.
  */
 
 
@@ -547,7 +551,7 @@ static uint32_t moe_GetObjectFromIP(uint32_t switchNum, uint32_t destIP, uint16_
 				*objHash = current_entry->objHash;
 				*pSwitchIP = current_entry->switchIP;
 				if(LOGGING){
-					os_WriteLog6("cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);
+					os_WriteLog6("Cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);
 					os_WriteLog4("ESIP=%u.%u.%u.%u", *((uint8_t*)pSwitchIP + 0), *((uint8_t*)pSwitchIP + 1), *((uint8_t*)pSwitchIP + 2), *((uint8_t*)pSwitchIP + 3));
 					os_WriteLog("ObjID=\n");
 
@@ -580,7 +584,7 @@ static uint32_t moe_GetObjectFromIP(uint32_t switchNum, uint32_t destIP, uint16_
 			*objHash = current_entry->objHash;
 			*pSwitchIP = current_entry->switchIP;
 			if(LOGGING){
-				os_WriteLog6("cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), (uint16_t)0);
+				os_WriteLog6("Cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), (uint16_t)0);
 				os_WriteLog4("ESIP=%u.%u.%u.%u", *((uint8_t*)pSwitchIP + 0), *((uint8_t*)pSwitchIP + 1), *((uint8_t*)pSwitchIP + 2), *((uint8_t*)pSwitchIP + 3));
 				os_WriteLog("ObjID=\n");
 				for (i=0 ; i<(HASH_LEN/8) ; i++) {
@@ -613,7 +617,7 @@ static uint32_t moe_GetOriginIPFromSrcIP(uint32_t switchNum, uint32_t srcIP, uin
 			if (current_entry->switchNum == switchNum &&
 				current_entry->moIP == moIP && current_entry->destPort == srcPort) {
 				*originIP = current_entry->destIP;
-				if(LOGGING){os_WriteLog6("cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), srcPort);}
+				if(LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), srcPort);}
 
 				return 1;
 			}
@@ -628,7 +632,7 @@ static uint32_t moe_GetOriginIPFromSrcIP(uint32_t switchNum, uint32_t srcIP, uin
 		if (current_entry->switchNum == switchNum &&
 			current_entry->moIP == moIP && current_entry->destPort == (uint16_t)0) {
 			*originIP = current_entry->destIP;
-			if(LOGGING){os_WriteLog6("cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), (uint16_t)0);}
+			if(LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), (uint16_t)0);}
 
 			return 1;
 		}
@@ -660,7 +664,7 @@ static uint32_t moe_GetObjectFromHash(uint32_t switchNum, uint8_t* objHash, uint
 				*pDestIP = current_entry->moIP;
 			}
 			if(LOGGING){
-				os_WriteLog4("cache hit! OldDestIP=%u.%u.%u.%u\n", *((uint8_t*)pOldDestIP + 0), *((uint8_t*)pOldDestIP + 1), *((uint8_t*)pOldDestIP + 2), *((uint8_t*)pOldDestIP + 3));
+				os_WriteLog4("Cache hit! OldDestIP=%u.%u.%u.%u\n", *((uint8_t*)pOldDestIP + 0), *((uint8_t*)pOldDestIP + 1), *((uint8_t*)pOldDestIP + 2), *((uint8_t*)pOldDestIP + 3));
 				os_WriteLog5("SwitchNum=%u, DestIP=%u.%u.%u.%u\n", switchNum, *((uint8_t*)pDestIP + 0), *((uint8_t*)pDestIP + 1), *((uint8_t*)pDestIP + 2), *((uint8_t*)pDestIP + 3));
 			}
 			return 1;
@@ -1374,6 +1378,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 //Jaehee modified 2018/02/20
 //Jaehee modified 2019/01/10
 //Jaehee modified 2019/05/01
+//Jaehee modified 2019/05/14
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key)
 {
 	uint8_t switchNum = 0;
@@ -1407,7 +1412,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 	data = skb->data;
 
-	if(LOGGING){os_WriteLog4("Received data mac header=%02x %02x %02x %02x.\n",data[ETH_ALEN+0],data[ETH_ALEN+1],data[ETH_ALEN+2],data[ETH_ALEN+3]);}
+	if(LOGGING){os_WriteLog4("Received data mac header=%02x:%02x:%02x:%02x:xx:xx.\n",data[ETH_ALEN+0],data[ETH_ALEN+1],data[ETH_ALEN+2],data[ETH_ALEN+3]);}
 	if (data[ETH_ALEN+0] == 0x10 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa ) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x20 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_SW;}
@@ -1434,7 +1439,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 		frag = *(uint8_t*)(data + 6); // if this packet fragmented, frag is 0x20
 
-		for (i=0 ; i<SWITCH_NUMS ; i++){
+		for (i=0 ; i<SWITCH_NUMS ; i++){ 
 			if(dstIP==SWITCHS_IP[i]) {
 				dstIPisSWIP = 1;
 				break;
@@ -1454,6 +1459,9 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 			}
 		}
+		
+		
+		
 		if (dstIP == 0 || dstIP == 0xFFFFFFFF) {return DO_FORWARD;}
 
 		totalLen = ntohs(*(uint16_t*)(data + 2));
@@ -1502,11 +1510,17 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					return DO_NOT_FORWARD;
 
 				}
-				if(LOGGING){os_WriteLog9("Switch num=%u, Original IP=%u.%u.%u.%u, New IP=%u.%u.%u.%u\n", switchNum,
+				if(LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 
-
+				if (newIP == SWITCHS_IP[switchNum-1]) { 
+					if(LOGGING){os_WriteLog8("Do not AddHeader, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
+										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
+										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
+					return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+				}
+					
 				if (newIP == 0) {
 					return moe_AddHeader(skb, srcIP, hashed, 0, IPPROTO_ICMP, 0); //new IP is 0 and doInsertObjID is 0
 				}
@@ -1616,7 +1630,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				}
 				// 170327 Jaehee
 			}
-			if(LOGGING){os_WriteLog10("Switch num=%u, Original IP=%u.%u.%u.%u, dstPort=%u, New IP=%u.%u.%u.%u\n", switchNum,
+			if(LOGGING){os_WriteLog10("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, dstPort=%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
 									  *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3), dstPort,
 									  *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 
@@ -1624,6 +1638,13 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				tp_protocol = IPPROTO_ICMP;
 			} // this packet is fragmented
 
+			if (newIP == SWITCHS_IP[switchNum-1]) { 
+				if(LOGGING){os_WriteLog8("Do not AddHeader, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
+										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
+										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
+				return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+			}
+			
 			if (newIP == 0) {
 				return moe_AddHeader(skb, srcIP, hashed, 0, tp_protocol, 0); //new IP is 0 and doInsertObjID is 0
 			}
@@ -1743,7 +1764,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM has successfully been loaded. 190501 22:00 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.1 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
