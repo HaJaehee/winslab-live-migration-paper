@@ -1419,8 +1419,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
-		//moe_CheckNewUE(switchNum, protocol, data);
-		if(LOGGING){os_WriteLog("New UE. Do nothing.\n");}
+		moe_CheckNewUE(switchNum, protocol, data);
+		if(LOGGING){os_WriteLog("New UE. Check new UE.\n");}
 		return DO_FORWARD;
 	}
 
