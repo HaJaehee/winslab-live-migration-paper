@@ -50,7 +50,7 @@
  *
  * Update 2019/06/07
  *              Update history: LM-MEC(2019) v1.3.2
- *			Conform checksum error.
+ *			Confirm checksum error.
  */
 
 
