@@ -838,7 +838,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 
 		skb_put(skb, MOE_HLEN);
 		/* Move the data to the beginning of the new data position. */
-		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, skb.data_len);
+		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, skb->len - ETH_HLEN - IP_HLEN);
 		
 		data = skb->data + ETH_HLEN;
 
