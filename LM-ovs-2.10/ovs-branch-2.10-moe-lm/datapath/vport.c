@@ -836,9 +836,9 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 			return -1;
 		}
 
-		skb_push_rcsum(skb, MOE_HLEN);
-		/* Move the mac addresses to the beginning of the new header. */
-		memmove(skb->data, skb->data + MOE_HLEN, ETH_HLEN + IP_HLEN);
+		skb_put(skb, MOE_HLEN);
+		/* Move the data to the beginning of the new data position. */
+		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, skb.data_len);
 		
 		data = skb->data + ETH_HLEN;
 
