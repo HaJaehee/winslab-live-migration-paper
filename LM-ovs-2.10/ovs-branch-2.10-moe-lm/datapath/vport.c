@@ -47,6 +47,10 @@
  * Update 2019/05/14
  *              Update history: LM-MEC(2019) v1.3.1
  *			Added specific cases.
+ *
+ * Update 2019/06/07
+ *              Update history: LM-MEC(2019) v1.3.2
+ *			Conform checksum error.
  */
 
 
@@ -823,6 +827,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 	uint32_t oldSrcIP = 0;
 	uint16_t pre16 = 0, post16 = 0;
 	uint32_t sum = 0;
+	int i = 0;
 
 	if(doInsertObjID) {
 
@@ -834,6 +839,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		skb_push(skb, MOE_HLEN);
 		/* Move the mac addresses to the beginning of the new header. */
 		memmove(skb->data, skb->data + MOE_HLEN, ETH_HLEN + IP_HLEN);
+		
 		data = skb->data + ETH_HLEN;
 
 
@@ -852,6 +858,21 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		memcpy(data + IP_HLEN + 1, (void*)"\x24", 1); // option field length
 		memcpy(data + IP_HLEN + 2, (void*)"\x0000", 2);
 		memcpy(data + IP_HLEN + 4, hashed, HASH_LEN);
+
+		/*
+		if (LOGGING){
+			os_WriteLog("ObjID=\n");
+			for (i=0 ; i<(HASH_LEN/8) ; i++) {
+						os_WriteLog8("%02x%02x%02x%02x%02x%02x%02x%02x\n", *((uint8_t*)hashed+((i*8))),*((uint8_t*)hashed+((i*8)+1)),*((uint8_t*)hashed+((i*8)+2)),*((uint8_t*)hashed+((i*8)+3)),*((uint8_t*)hashed+((i*8)+4)),*((uint8_t*)hashed+((i*8)+5)),*((uint8_t*)hashed+((i*8)+6)),*((uint8_t*)hashed+((i*8)+7)));
+					}
+			
+						
+			os_WriteLog("Inserted ObjID=\n");
+			for (i=0 ; i<(HASH_LEN/8) ; i++) {
+						os_WriteLog8("%02x%02x%02x%02x%02x%02x%02x%02x\n", *((uint8_t*)(data + IP_HLEN + 4)+((i*8))),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+1)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+2)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+3)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+4)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+5)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+6)),*((uint8_t*)(data + IP_HLEN + 4)+((i*8)+7)));
+					}
+			
+		}*/
 
 		temp = htons(CalculateIPChecksum(data, IP_HLEN + MOE_HLEN));
 		memcpy(data + 10, (void*)&temp, 2);
@@ -1764,7 +1785,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.1 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.2 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
