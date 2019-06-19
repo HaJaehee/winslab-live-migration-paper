@@ -51,6 +51,10 @@
  * Update 2019/06/07
  *              Update history: LM-MEC(2019) v1.3.2
  *			Confirm checksum error.
+ *
+ * Update 2019/06/19
+ *              Update history: LM-MEC(2019) v1.3.3
+ *			Fixed check New UE bug. 
  */
 
 
@@ -1401,6 +1405,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 //Jaehee modified 2019/01/10
 //Jaehee modified 2019/05/01
 //Jaehee modified 2019/05/14
+//Jaehee modified 2019/06/19
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key)
 {
 	uint8_t switchNum = 0;
@@ -1446,8 +1451,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
-		moe_CheckNewUE(switchNum, protocol, data);
 		if(LOGGING){os_WriteLog("New UE. Check new UE.\n");}
+		moe_CheckNewUE(switchNum, protocol, data);
 		return DO_FORWARD;
 	}
 
@@ -1592,13 +1597,13 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_TCP && totalLen == 246 && srcPort == 4001 && dstPort == 14999) {
-			moe_CheckNewUE(switchNum, protocol, data);
 			if(LOGGING){os_WriteLog("New UE.\n");}
+			moe_CheckNewUE(switchNum, protocol, data);
 			return DO_NOT_FORWARD;
 		}
 		
 		if (tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
-			if(LOGGING){os_WriteLog("DHCP.\n");}
+			if(LOGGING){os_WriteLog("DHCP of new UE. Do nothing.\n");}
 			return DO_FORWARD;
 
 		}
@@ -1786,7 +1791,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.2 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.3 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
