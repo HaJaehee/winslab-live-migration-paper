@@ -1433,9 +1433,9 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 	if (LOGGING){os_WriteLog("A new packet.\n");}
 	switchNum = moe_GetSwitchNum(skb);
-	if (switchNum > SWITCH_NUMS) {return DO_FORWARD;}
+	if (switchNum > SWITCH_NUMS) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 	switchType = SW_TYPES[switchNum-1];
-	if (switchType != SWITCHTYPE_ES) {return DO_FORWARD;}
+	if (switchType != SWITCHTYPE_ES) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 	data = skb->data;
 
@@ -1443,22 +1443,22 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	if (data[ETH_ALEN+0] == 0x10 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa ) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x20 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_SW;}
-	if (senderType == SENDERTYPE_NONE) {return DO_FORWARD;}
+	if (senderType == SENDERTYPE_NONE) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 	protocol = ntohs(*(uint16_t*)(data + ETH_ALEN*2));
-	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {return DO_FORWARD;}
+	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
 		if(LOGGING){os_WriteLog("New UE. Check new UE.\n");}
 		moe_CheckNewUE(switchNum, protocol, data);
-		return DO_FORWARD;
+		if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 	}
 
 	else if (protocol == ETH_P_IP) {
 		IHL = *(uint8_t*)data;           // Do not use 'ntohl'
-		if (IHL != 0x45 && IHL != 0x4E) {return DO_FORWARD;} //4B(SHA1) -> 4E(SHA256)
+		if (IHL != 0x45 && IHL != 0x4E) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;} //4B(SHA1) -> 4E(SHA256)
 		srcIP = *(uint32_t*)(data + 12);	// Do not use 'ntohl'
 		ptrSrcIP = (uint32_t*)(data + 12);
 
@@ -1489,7 +1489,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		
 		
 		
-		if (dstIP == 0 || dstIP == 0xFFFFFFFF) {return DO_FORWARD;}
+		if (dstIP == 0 || dstIP == 0xFFFFFFFF) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 		totalLen = ntohs(*(uint16_t*)(data + 2));
 		tp_protocol = *(data + 9);
@@ -1545,7 +1545,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					if(LOGGING){os_WriteLog8("Do not AddHeader, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-					return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+					if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
 				}
 					
 				if (newIP == 0) {
@@ -1561,7 +1561,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// --------------------------------------------------------------------------------
 
 			if (IHL == 0x45) {
-				return DO_FORWARD;
+				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 			}
 			else if (senderType == SENDERTYPE_SW && IHL == 0x4E && dstIPisSWIP) {
 
@@ -1576,7 +1576,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 				if (newIP == 0) {
-					return DO_FORWARD;
+					if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 				}
 
 				return moe_RemoveHeader(skb, oldIP, newIP, IPPROTO_ICMP);
@@ -1605,7 +1605,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
 			if(LOGGING){os_WriteLog("DHCP of new UE.\n");}
 			moe_CheckNewUE(switchNum, protocol, data);
-			return DO_FORWARD;
+			if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 
 		}
 		
@@ -1670,7 +1670,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if(LOGGING){os_WriteLog8("Do not AddHeader, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-				return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
 			}
 			
 			if (newIP == 0) {
@@ -1697,7 +1697,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 									  *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));
 				os_WriteLog4("Old IP=%u.%u.%u.%u\n", *((uint8_t*)&oldIP + 0), *((uint8_t*)&oldIP + 1), *((uint8_t*)&oldIP + 2), *((uint8_t*)&oldIP + 3));}
 			if (newIP == 0) {
-				return DO_FORWARD;
+				
+				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 			}
 
 			/*
@@ -1720,7 +1721,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 	}
 
-	return DO_FORWARD;
+	if(LOGGING){os_WriteLog("Forwarding.");} 
+ return DO_FORWARD;
 }
 
 // ------------------------------------------------------------
