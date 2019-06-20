@@ -1602,8 +1602,9 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			return DO_NOT_FORWARD;
 		}
 		
-		if (tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
-			if(LOGGING){os_WriteLog("DHCP of new UE. Do nothing.\n");}
+		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
+			if(LOGGING){os_WriteLog("DHCP of new UE.\n");}
+			moe_CheckNewUE(switchNum, protocol, data);
 			return DO_FORWARD;
 
 		}
