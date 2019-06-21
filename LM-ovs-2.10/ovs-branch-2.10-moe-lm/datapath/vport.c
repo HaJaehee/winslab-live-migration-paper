@@ -1554,7 +1554,12 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 
-				
+				if (newIP == SWITCHS_IP[switchNum-1]) { 
+					if(LOGGING){os_WriteLog8("Do not AddHeader, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
+										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
+										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
+					if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+				}
 					
 				if (newIP == 0) {
 					return moe_AddHeader(skb, srcIP, hashed, 0, IPPROTO_ICMP, 0); //new IP is 0 and doInsertObjID is 0
