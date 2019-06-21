@@ -850,13 +850,14 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 			return -1;
 		}
 
+		if(LOGGING){os_WriteLog("--0--skb_put().\n");}
 		skb_put(skb, MOE_HLEN);
 		/* Move the data to the beginning of the new data position. */
 		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, skb->len - ETH_HLEN - IP_HLEN);
 		
 		data = skb->data + ETH_HLEN;
 
-
+		if(LOGGING){os_WriteLog("--1--Header extension.\n");}
 		memcpy(data + 0, (void*)"\x4E", 1);
 		len = ntohs(*(uint16_t*)(data + 2));
 		if(LOGGING){os_WriteLog1("packet length(before)=%d\n",len);}
@@ -864,15 +865,17 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		if(LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
 		memcpy(data + 2, (void*)&len, 2);
 
-
+		if(LOGGING){os_WriteLog("--2--Changing dst IP.\n");}
 		memcpy(data + 10, (void*)"\x0000", 2);
 		memcpy(&oldSrcIP, data + 12, sizeof(uint32_t));
 		memcpy(data + 16, (void*)&esIP, sizeof(esIP));
+		if(LOGGING){os_WriteLog("--3--Inserting OID.\n");}
 		memcpy(data + IP_HLEN + 0, (void*)"\x00", 1);
 		memcpy(data + IP_HLEN + 1, (void*)"\x24", 1); // option field length
 		memcpy(data + IP_HLEN + 2, (void*)"\x0000", 2);
 		memcpy(data + IP_HLEN + 4, hashed, HASH_LEN);
 
+		
 		/*
 		if (LOGGING){
 			os_WriteLog("ObjID=\n");
@@ -887,9 +890,10 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 					}
 			
 		}*/
-
+		if(LOGGING){os_WriteLog("--4--Calculating IP checksum.\n");}
 		temp = htons(CalculateIPChecksum(data, IP_HLEN + MOE_HLEN));
 		memcpy(data + 10, (void*)&temp, 2);
+		if(LOGGING){os_WriteLog("--5--Done.\n");}
 	}
 	else {
 		if(LOGGING){os_WriteLog("No adding header operation. Just calculate checksum.\n");}
