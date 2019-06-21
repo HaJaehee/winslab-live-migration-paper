@@ -891,7 +891,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		memcpy(data + 10, (void*)&temp, 2);
 	}
 	else {
-		if(LOGGING){os_WriteLog("Change src IP operation.\n");}
+		if(LOGGING){os_WriteLog("No adding header operation. Just calculate checksum.\n");}
 		data = skb->data + ETH_HLEN;
 
 		memcpy(&oldSrcIP, data + 12, sizeof(uint32_t));
@@ -1533,6 +1533,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				//ipc_SendMessage(switchNum, OPCODE_INFORM_CONNECTION, srcIP, data + 8); // 170327 Jaehee
 
 				if (srcIP != 16777343 && srcIP != SWITCHS_IP[switchNum-1] && moe_GetOriginIPFromSrcIP(switchNum, srcIP, 0, &hashed, &originalIP)) {
+					if(LOGGING){os_WriteLog("Changing src IP operation.\n");}
 					memcpy(ptrSrcIP,&originalIP,sizeof(uint32_t));
 					if(LOGGING){os_WriteLog9("ICMP, Switch num=%u, SrcIP=%u.%u.%u.%u, Original IP=%u.%u.%u.%u\n", switchNum,
 											 *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
@@ -1643,6 +1644,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 			}*/
 			if (srcIP != 16777343 && srcIP != SWITCHS_IP[switchNum-1] && moe_GetOriginIPFromSrcIP(switchNum, srcIP, srcPort, &hashed, &originalIP)) {
+				if(LOGGING){os_WriteLog("Changing src IP operation.\n");}
 				memcpy(ptrSrcIP,&originalIP,sizeof(uint32_t));
 				if(LOGGING){os_WriteLog10("Switch num=%u, SrcIP=%u.%u.%u.%u, srcPort=%u, Original IP=%u.%u.%u.%u\n", switchNum,
 										  *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), srcPort,
