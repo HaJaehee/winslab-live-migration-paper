@@ -762,6 +762,7 @@ static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP)
 		}
 		if (entry->switchNum == switchNum && entry->destIP == destIP) {
 			if (moe_CheckHeader(entry->vp, entry->skb, NULL) == -1) {continue;}
+			if(LOGGING){os_WriteLog("Processing packet.");}
 			rcu_read_lock();
             ovs_dp_process_packet(entry->skb, NULL);
 			rcu_read_unlock();
@@ -1740,7 +1741,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	}
 
 	if(LOGGING){os_WriteLog("Forwarding.");} 
- return DO_FORWARD;
+    return DO_FORWARD;
 }
 
 // ------------------------------------------------------------
@@ -2290,6 +2291,7 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 		}
 	}
 	 else */if (moe_CheckHeader(vport, skb, &key) == -1) {return;}
+	if(LOGGING){os_WriteLog("Processing packet.");}
 	ovs_dp_process_packet(skb, &key);
 	// LOHan: Statistics Support
 	/*do_gettimeofday(&END_TIME);
