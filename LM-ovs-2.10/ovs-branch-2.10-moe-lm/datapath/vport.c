@@ -55,6 +55,10 @@
  * Update 2019/06/19
  *              Update history: LM-MEC(2019) v1.3.3
  *			Fixed check New UE bug. 
+ *
+ * Update 2019/06/20
+ *              Update history: LM-MEC(2019) v1.3.4
+ *			Made a DHCP register an UE. 
  */
 
 
@@ -1534,7 +1538,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					// Send a request message to the upper layer
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					return DO_NOT_FORWARD;
+					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 
 				}
 				if(LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
@@ -1570,7 +1574,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					// Send a request message to the upper layer
 					ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
 					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					return DO_NOT_FORWARD;
+					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 				}
 				if(LOGGING){os_WriteLog9("Switch num=%u, Received IP=%u.%u.%u.%u, Host IP=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
@@ -1599,7 +1603,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_TCP && totalLen == 246 && srcPort == 4001 && dstPort == 14999) {
 			if(LOGGING){os_WriteLog("New UE.\n");}
 			moe_CheckNewUE(switchNum, protocol, data);
-			return DO_NOT_FORWARD;
+			if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 		}
 		
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
@@ -1629,7 +1633,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				// Send a request message to the upper layer
 				ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, 0);
 				moe_SaveSKB(switchNum, dstIP, vp, skb);
-				return DO_NOT_FORWARD;
+				if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 			}*/
 			if (srcIP != 16777343 && srcIP != SWITCHS_IP[switchNum-1] && moe_GetOriginIPFromSrcIP(switchNum, srcIP, srcPort, &hashed, &originalIP)) {
 				memcpy(ptrSrcIP,&originalIP,sizeof(uint32_t));
@@ -1648,13 +1652,13 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if (dstPort > 61000 || dstPort < 32768) {
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					return DO_NOT_FORWARD;
+					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 				} else {
 					dstPortByteArr[0] = 0;
 					dstPortByteArr[1] = 0;
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					return DO_NOT_FORWARD;
+					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 				}
 				// 170327 Jaehee
 			}
@@ -1690,7 +1694,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				// Send a request message to the upper layer
 				ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
 				moe_SaveSKB(switchNum, dstIP, vp, skb);
-				return DO_NOT_FORWARD;
+				if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 			}
 			if(LOGGING){os_WriteLog10("Switch num=%u, Received IP=%u.%u.%u.%u, dstPort=%u, Host IP=%u.%u.%u.%u\n", switchNum,
 									  *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3), dstPort,
@@ -1794,7 +1798,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.3 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.4 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
