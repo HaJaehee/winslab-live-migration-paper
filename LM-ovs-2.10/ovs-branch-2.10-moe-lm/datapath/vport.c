@@ -1566,7 +1566,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// --------------------------------------------------------------------------------
 			// Ignore ICMP Packet 
 			// --------------------------------------------------------------------------------
-			if (IHL == 0x45 || dstIPisSWIP) {
+			if (IHL == 0x45) {
 				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 				
 			}
