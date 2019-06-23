@@ -63,6 +63,10 @@
  * Update 2019/06/21
  *              Update history: LM-MEC(2019) v1.3.5
  *			Condition of that a destination IP is a SW IP is revised.
+ *
+ * Update 2019/06/23
+ *              Update history: LM-MEC(2019) v1.3.6
+ *			Why it search cache if dst IP is SWIP?.
  */
 
 
@@ -318,6 +322,11 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 										 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3));}
 				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, 0);
 			}
+			/////////////////////////////////////////////////////////////////
+			else {
+				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, 0);
+			}
+			/////////////////////////////////////////////////////////////////
 		} else if (opCode == OPCODE_NEW_APP) { // Jaehee: TODO
 			if(LOGGING){os_WriteLog("OPCODE_NEW_APP\n");}
 			tempHash = NULL;
@@ -356,6 +365,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			PRT_START_PAGE = *(uint32_t*)(skb->data + 2);
 		}
 		kfree_skb(skb);
+
 	}
 }
 
@@ -1423,6 +1433,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 //Jaehee modified 2019/05/14
 //Jaehee modified 2019/06/19
 //Jaehee modified 2019/06/21
+//Jaehee modified 2019/06/23
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key)
 {
 	uint8_t switchNum = 0;
@@ -1462,16 +1473,34 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	if (data[ETH_ALEN+0] == 0x20 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_SW;}
 	if (senderType == SENDERTYPE_NONE) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
+
+	 
 	protocol = ntohs(*(uint16_t*)(data + ETH_ALEN*2));
 	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+
+	if (senderType == SENDERTYPE_UE) {
+		if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa && data[ETH_ALEN+3] == 0xa6 && data[ETH_ALEN+4] == 0x22 && data[ETH_ALEN+5] == 0x2c) {
+		}
+		
+		else if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa && data[ETH_ALEN+3] == 0xae && data[ETH_ALEN+4] == 0x05 && data[ETH_ALEN+5] == 0x51) {
+		}
+		
+		else {
+			if(LOGGING){os_WriteLog("Neither red nor blue. Forwarding.");} return DO_FORWARD;
+		}
+		
+		if(LOGGING){os_WriteLog("Either red or blue. Check new UE.");}
+	}
 
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
-		if(LOGGING){os_WriteLog("New UE. Check new UE.\n");}
+		if(LOGGING){os_WriteLog("ARP of new UE. Do nothing.\n");}
 		moe_CheckNewUE(switchNum, protocol, data);
 		if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 	}
+	
+
 
 	else if (protocol == ETH_P_IP) {
 		IHL = *(uint8_t*)data;           // Do not use 'ntohl'
@@ -1483,13 +1512,16 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 		frag = *(uint8_t*)(data + 6); // if this packet fragmented, frag is 0x20
 
+		
+		
+
 		for (i=0 ; i<SWITCH_NUMS ; i++){ 
 			if(dstIP==SWITCHS_IP[i]) {
 				dstIPisSWIP = 1;
 				break;
 			}
 		}
-		if (senderType==SENDERTYPE_UE && !dstIPisSWIP) {
+		if (senderType==SENDERTYPE_UE && 0==dstIPisSWIP) {
 			if(LOGGING){
 				os_WriteLog3("Check header. Switch num=%u, type=%u, Sender type=%u\n", switchNum, switchType, senderType);
 				os_WriteLog8("New packet. Source IP=%u.%u.%u.%u, Destination IP=%u.%u.%u.%u\n",
@@ -1497,7 +1529,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 				os_WriteLog4("Value of source IP pointer=%u.%u.%u.%u\n", *((uint8_t*)ptrSrcIP + 0),*((uint8_t*)ptrSrcIP + 1),*((uint8_t*)ptrSrcIP + 2),*((uint8_t*)ptrSrcIP + 3));
 			}
-		} else if (dstIPisSWIP) {
+		} else if (1==dstIPisSWIP) {
 			if(LOGGING){
 				os_WriteLog8("Check header. Source IP=%u.%u.%u.%u, Destination SWIP=%u.%u.%u.%u\n",*((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
@@ -1521,13 +1553,20 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		// --------------------------------------------------------------------------------
 
 		if (tp_protocol == IPPROTO_ICMP){
+			
+			
 			if(LOGGING){
 				os_WriteLog8("ICMP packet check header. Source IP=%u.%u.%u.%u, Destination IP=%u.%u.%u.%u\n",*((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 			}
 
+			//////////////////////////////////////////
+			if (senderType == SENDERTYPE_UE) {
+				moe_CheckNewUE(switchNum, protocol, data);
+			}
+			//////////////////////////////////////////
 
-			if ((IHL == 0x45 && (totalLen - IP_HLEN >= 18) && ((dstIP&0x00ffffff)!=(SWITCHS_IP[switchNum-1]&0x00ffffff)) && dstIP != 16777343 && dstIP != SWITCHS_IP[switchNum-1])||(senderType == SENDERTYPE_UE && (totalLen - IP_HLEN >= 18) && IHL == 0x45 && !dstIPisSWIP)) {
+			if ((IHL == 0x45 && (totalLen - IP_HLEN >= 18) && ((dstIP&0x00ffffff)!=(SWITCHS_IP[switchNum-1]&0x00ffffff)) && dstIP != 16777343 && dstIP != SWITCHS_IP[switchNum-1])||(senderType == SENDERTYPE_UE && (totalLen - IP_HLEN >= 18) && IHL == 0x45 && 0==dstIPisSWIP)) {
 				//normal IP packet
 				//dstIP is not 127.0.0.1 and not this switch's ip
 				//host is in other subnet
@@ -1546,14 +1585,15 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 				}
 
-				if (!dstIPisSWIP && !moe_GetObjectFromIP(switchNum, dstIP, 0, &hashed, &newIP)) { // If it doesn't exist,
-					dstPortByteArr[1] = 0;
-					dstPortByteArr[0] = 0;
-					// Send a request message to the upper layer
-					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
-					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
-
+				if (0==dstIPisSWIP){ 
+					if(!moe_GetObjectFromIP(switchNum, dstIP, 0, &hashed, &newIP)) { // If it doesn't exist,
+						dstPortByteArr[1] = 0;
+						dstPortByteArr[0] = 0;
+						// Send a request message to the upper layer
+						ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
+						moe_SaveSKB(switchNum, dstIP, vp, skb);
+						if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+					}
 				}
 				if(LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
@@ -1585,7 +1625,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// --------------------------------------------------------------------------------
 			// ICMP Header Removal Operation
 			// --------------------------------------------------------------------------------
-			else if (senderType == SENDERTYPE_SW && IHL == 0x4E && dstIPisSWIP) {
+			else if (senderType == SENDERTYPE_SW && IHL == 0x4E && 1==dstIPisSWIP) {
 
 				hashed = data + IP_HLEN + 4;
 				if (!moe_GetObjectFromHash(switchNum, hashed, &oldIP, &newIP)) { // If it doesn't exist,
@@ -1625,8 +1665,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 		
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
-			if(LOGGING){os_WriteLog("DHCP of new UE.\n");}
-			moe_CheckNewUE(switchNum, protocol, data);
+			if(LOGGING){os_WriteLog("DHCP of new UE. Do nothing.\n");}
+			//moe_CheckNewUE(switchNum, protocol, data);
 			if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 
 		}
@@ -1644,7 +1684,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 
 
-		if ((senderType == SENDERTYPE_UE && IHL == 0x45) || (senderType == SENDERTYPE_SW && IHL == 0x45 && !dstIPisSWIP))  {
+		if ((senderType == SENDERTYPE_UE && IHL == 0x45) || (senderType == SENDERTYPE_SW && IHL == 0x45 && 0==dstIPisSWIP))  {
 			hashed = NULL;
 			// Check entry in order to append an MoE header
 			/*if (!moe_GetObjectFromIP(switchNum, dstIP, 0, &hashed, &newIP)) { // If it doesn't exist,
@@ -1706,7 +1746,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// --------------------------------------------------------------------------------
 			// Header Removal Operation
 			// --------------------------------------------------------------------------------
-		else if (senderType == SENDERTYPE_SW && IHL == 0x4E && dstIPisSWIP) {
+		else if (senderType == SENDERTYPE_SW && IHL == 0x4E && 1==dstIPisSWIP) {
 
 			hashed = data + IP_HLEN + 4;
 			if (!moe_GetObjectFromHash(switchNum, hashed, &oldIP, &newIP)) { // If it doesn't exist,
@@ -1817,7 +1857,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.5 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.6 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);

@@ -716,7 +716,7 @@ class DHTServer {
 						
 						String recvData = jobj.get(VISITING_IP+"").getAsString() + jobj.get(ES_IP+"").getAsString();
 						
-						byte[] sendData = new byte[42];//Jaehee modified 160720
+						byte[] sendData = new byte[43];//Jaehee modified 160720
 						
 						sendData[0] = OPCODE_QUERIED_HASH;
 						sendData[1] = lswitchNum;
@@ -727,7 +727,7 @@ class DHTServer {
 						for (int i = 0; i < LM_HDR_LENGTH;i++){//Jaehee modified 160720
 							sendData[6+i]=  lhashedIP[i];
 						}
-
+						sendData[42]='\0';
 
 						LMDHTServer.clientCh.writeAndFlush(
 							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
@@ -835,7 +835,7 @@ class DHTServer {
 						
 						String recvData = jobj.get(VISITING_IP+"").getAsString() + jobj.get(ES_IP+"").getAsString();
 						
-						byte[] sendData = new byte[42];//Jaehee modified 160720
+						byte[] sendData = new byte[43];//Jaehee modified 160720
 						
 						sendData[0] = OPCODE_QUERIED_IP;
 						sendData[1] = switchNum;
@@ -847,7 +847,8 @@ class DHTServer {
 						for (int i = 0; i < LM_HDR_LENGTH;i++){//Jaehee modified 160720
 							sendData[6+i]=  hashedIP[i];
 						}
-
+						
+						sendData[42]= '\0';
 						LMDHTServer.clientCh.writeAndFlush(
 							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
 
@@ -894,7 +895,7 @@ class DHTServer {
 					} else {
 						if(LMDHTServer.logging)System.out.println("Get Failed");
 						
-						byte[] sendData = new byte[42];//Jaehee modified 160720
+						byte[] sendData = new byte[43];//Jaehee modified 160720
 						
 						sendData[0] = OPCODE_QUERIED_IP;
 						sendData[1] = switchNum;
@@ -905,6 +906,8 @@ class DHTServer {
 						for (int i = 0; i < LM_HDR_LENGTH;i++){ //Jaehee modified 160720
 							sendData[6+i]=  hashedIP[i];
 						}
+						
+						sendData[42]='\0';
 						LMDHTServer.clientCh.writeAndFlush(
 				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
 
@@ -990,7 +993,7 @@ class DHTServer {
 						jobj = (JsonObject) parser.parse(foundData);
 						String recvData = jobj.get(HOME_TARGET_HOST+"").getAsString() + jobj.get(ES_IP+"").getAsString() + jobj.get(VISITING_IP+"").getAsString() + strPort;
 
-						byte[] sendData = new byte[48];//Jaehee modified 160720
+						byte[] sendData = new byte[49];//Jaehee modified 160720
 						
 						sendData[0] = OPCODE_NEW_APP;
 						sendData[1] = lswitchNum;
@@ -1007,7 +1010,7 @@ class DHTServer {
 							sendData[16+i]=  lhashedIP[i];
 						}
 
-
+						sendData[48]='\0';
 						LMDHTServer.clientCh.writeAndFlush(
 							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
 				
@@ -1089,7 +1092,7 @@ class DHTServer {
 						case 1 : strPort = "0"+strPort;
 								break;
 						}
-						byte[] sendData = new byte[48];//Jaehee modified 160720
+						byte[] sendData = new byte[49];//Jaehee modified 160720
 						
 						sendData[0] = OPCODE_NEW_APP;
 						sendData[1] = switchNum;
@@ -1106,6 +1109,8 @@ class DHTServer {
 						for (int i = 0; i < LM_HDR_LENGTH;i++){ //Jaehee modified 160720
 							sendData[16+i]=  hashedIP[i];
 						}
+						
+						sendData[48]='\0';
 						LMDHTServer.clientCh.writeAndFlush(
 				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
 
