@@ -83,6 +83,7 @@
 #include <linux/compat.h>
 #include <linux/module.h>
 #include <linux/if_link.h>
+#include <linux/refcount.h>
 #include <net/net_namespace.h>
 #include <net/lisp.h>
 #include <net/gre.h>
@@ -191,6 +192,7 @@ uint16_t STAT_NEW_UES[SWITCH_NUMS];
 
 int LOGGING = 1;
 int LOGGING_SEARCH_LATENCY = 0;
+int udpRcvCount=0;
 
 static uint8_t sendBuffer[128];
 
@@ -248,7 +250,13 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 	uint8_t* tempHash = NULL;
 	uint32_t temp = 0, newmoIP = 0;
 	uint16_t destPort = 0;
+
+	struct sockaddr_in server;
+	
 	while ((len = skb_queue_len(&wrapper->sk->sk_receive_queue)) > 0) {
+		if(LOGGING){os_WriteLog1("Worker queue's socket list length=%d.\n",len);}
+		if(LOGGING){os_WriteLog1("Prcessing IPC message count=%d.\n",udpRcvCount);}
+		udpRcvCount++;
 		skb = skb_dequeue(&wrapper->sk->sk_receive_queue);
 		opCode = *(uint8_t*)(skb->data);
 		switchNum = *(uint8_t*)(skb->data+ 1);
@@ -364,8 +372,25 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 		} else if (opCode == 100) {
 			PRT_START_PAGE = *(uint32_t*)(skb->data + 2);
 		}
+		refcount_set(&skb->users,1);
 		kfree_skb(skb);
+		
+		if (udpRcvCount>50){
+			udpRcvCount =0;
+			sock_release(udpsocket);
 
+			if (sock_create(PF_INET, SOCK_DGRAM, IPPROTO_UDP, &udpsocket) < 0)
+				return;
+			server.sin_family = AF_INET;
+			server.sin_addr.s_addr = INADDR_ANY;
+			server.sin_port = htons((unsigned short)9999);
+			if (udpsocket->ops->bind(udpsocket, (struct sockaddr*)&server, sizeof(server))) {
+				sock_release(udpsocket);
+				return;
+			}
+
+			udpsocket->sk->sk_data_ready = cb_SocketDataReady;
+		}
 	}
 }
 

@@ -40,13 +40,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 
 
 public final class LMDHTServer {
     public static String[] swIPAddrList = {"10.0.10.1","10.0.20.1","10.0.30.1","10.0.40.1","10.0.50.1","10.64.0.1"};
     public static short edgeSWList[] = {1,2,3,0,0,6};
     public static int swCount = swIPAddrList.length;
-    public static Channel clientCh;
+    //public static Channel clientCh;
     public static int PORT;
     public static int nodeIndex;
     public static DHTServer kserver = null;
@@ -55,6 +57,7 @@ public final class LMDHTServer {
     public static String[] input = null;
     public static int ksvrPort = 8468;
     public static int ovsPort = 9999;
+    public static Bootstrap bClient;
 
    
     
@@ -91,15 +94,17 @@ public final class LMDHTServer {
 			}
 	    	nodeIndex = Integer.parseInt(input[0]);
 	    }
-	
-       
+
         EventLoopGroup groupClient = new NioEventLoopGroup();
-        Bootstrap bClient = new Bootstrap();
+        bClient = new Bootstrap();
         bClient.group(groupClient)
         		.channel(NioDatagramChannel.class)
                 .handler(new ClientHandler());
-
-        clientCh = bClient.bind(0).sync().channel();
+        
+        Thread.sleep(1000);
+		
+        //clientCh = bClient.bind(0).sync().channel();
+        
         
         PORT = 10000 + nodeIndex+1;
         System.out.println("port "+PORT+" is opened.");
@@ -170,9 +175,11 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 			}
 			System.out.println();
         }
+        
+        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
         //wake up signal to ovs
-        LMDHTServer.clientCh.writeAndFlush(
-            new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+        clientCh.writeAndFlush(
+            new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
     }
 
@@ -329,15 +336,21 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                     byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
-                    LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+				    
+
+			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+                    clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
                 }
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
 			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
-			LMDHTServer.clientCh.writeAndFlush(
-    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).sync();
+
+	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+			
+			clientCh.writeAndFlush(
+    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 			
 			
 //			String opCode = OPCODE_INFORM_CONNECTION;
@@ -409,15 +422,22 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
 					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+"\n");
-                    LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+                   
+
+			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+					
+					clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
                 }
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
 			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
-			LMDHTServer.clientCh.writeAndFlush(
-    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).sync();
+			
+
+	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+			clientCh.writeAndFlush(
+    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 			
 			/*
 			for (int i = 0;i < 4;i++){
@@ -435,8 +455,10 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				sendBuf[1] = swByte[1];
 				int swListIndex = LMDHTServer.edgeSWList[i]-1;
-                LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+                	     
+		        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+                clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 			}*/
 
@@ -516,15 +538,20 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
 					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+"\n");
-                    LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+
+			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+					clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
                 }
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
 			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
-			LMDHTServer.clientCh.writeAndFlush(
-    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).sync();
+			
+
+	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+			clientCh.writeAndFlush(
+    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 			
 			/*
@@ -543,8 +570,11 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				sendBuf[1] = swByte[1];
 				int swListIndex = LMDHTServer.edgeSWList[i]-1;
-                LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+                
+	
+		        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();                
+                clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
                 
 			}*/
         
@@ -592,16 +622,22 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                     byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
-                    LMDHTServer.clientCh.writeAndFlush(
-    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).sync();
+                    
+	
+			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+				    clientCh.writeAndFlush(
+    	                        new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress(LMDHTServer.swIPAddrList[swListIndex],LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
                 } 
 				
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
 			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
-			LMDHTServer.clientCh.writeAndFlush(
-    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).sync();  
+
+	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+			
+			clientCh.writeAndFlush(
+    	         new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("127.0.0.1",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);  
             //---------------client example
 //			String opCode = "OPCODE_TOGGLE_LOGGING";
 //			String swNum = "01"; 
@@ -616,6 +652,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 }
 
+@ChannelHandler.Sharable
 class ClientHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) {
@@ -729,8 +766,10 @@ class DHTServer {
 						}
 						sendData[42]='\0';
 
-						LMDHTServer.clientCh.writeAndFlush(
-							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 				
 						if(LMDHTServer.logging) {
 							System.out.println("send oid:");
@@ -849,8 +888,10 @@ class DHTServer {
 						}
 						
 						sendData[42]= '\0';
-						LMDHTServer.clientCh.writeAndFlush(
-							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 						if(LMDHTServer.logging) {
 							System.out.println("send oid:");
@@ -908,8 +949,11 @@ class DHTServer {
 						}
 						
 						sendData[42]='\0';
-						LMDHTServer.clientCh.writeAndFlush(
-				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 						if(LMDHTServer.logging) {
 							System.out.println("send oid:");
@@ -1011,9 +1055,12 @@ class DHTServer {
 						}
 
 						sendData[48]='\0';
-						LMDHTServer.clientCh.writeAndFlush(
-							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
-				
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+							new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
+						
+						
 						if(LMDHTServer.logging) {
 							System.out.println("send oid:");
 							for (int i = 0 ; i < LM_HDR_LENGTH ; i++) {
@@ -1067,8 +1114,10 @@ class DHTServer {
 						for (int i = 0; i < LM_HDR_LENGTH;i++){//Jaehee modified 160720
 							sendData[6+i]=  hashedIP[i];
 						}
-						LMDHTServer.clientCh.writeAndFlush(
-				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 						
 						if(LMDHTServer.logging)System.out.println("Get Failed");
 					}*/
@@ -1111,8 +1160,10 @@ class DHTServer {
 						}
 						
 						sendData[48]='\0';
-						LMDHTServer.clientCh.writeAndFlush(
-				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+
+				        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
+						clientCh.writeAndFlush(
+				                        new DatagramPacket(Unpooled.copiedBuffer(sendData), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 
 						
@@ -1357,7 +1408,7 @@ class DHTServer {
 
 
 						LMDHTServer.client_ch.writeAndFlush(
-							new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+							new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 				
 					} else {
 						byte[] send_data = new byte[42];//Jaehee modified 160720
@@ -1372,7 +1423,7 @@ class DHTServer {
 							send_data[6+i]=  hashedIP[i];
 						}
 						LMDHTServer.client_ch.writeAndFlush(
-				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 
 						if(LMDHTServer.logging)System.out.println("Get Failed");
@@ -1406,7 +1457,7 @@ class DHTServer {
 						}
 
 						LMDHTServer.client_ch.writeAndFlush(
-							new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+							new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 					} else {
 						byte[] send_data = new byte[42];//Jaehee modified 160720
@@ -1421,7 +1472,7 @@ class DHTServer {
 							send_data[6+i]=  hashedIP[i];
 						}
 						LMDHTServer.client_ch.writeAndFlush(
-				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).sync();
+				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 
 						if(LMDHTServer.logging)System.out.println("Get Failed");
