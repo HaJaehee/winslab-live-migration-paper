@@ -124,8 +124,8 @@
 #define SWITCH_NUMS         6
 //#define SWITCH_NUMS         3
 
-uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 33564682};
-//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.40.0.2
+uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 36175882};
+//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.0.40.2
 
 static const uint8_t OVS_MODE = OVS_MODE_TESTBED;
 static struct socket* udpsocket = NULL;
@@ -1548,6 +1548,11 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				break;
 			}
 		}
+		
+		 if (1==dstIPisSWIP) {
+			 os_WriteLog("Destination IP is switch IP.");
+		 }
+		
 		if (senderType==SENDERTYPE_UE && 0==dstIPisSWIP) {
 			if(LOGGING){
 				os_WriteLog3("Check header. Switch num=%u, type=%u, Sender type=%u\n", switchNum, switchType, senderType);
