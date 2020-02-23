@@ -45,7 +45,7 @@ import io.netty.channel.ChannelHandler;
 
 
 public final class LMDHTServer {
-    public static String[] swIPAddrList = {"10.0.10.1","10.0.20.1","10.0.30.1","10.0.40.1","10.0.50.1","10.64.0.1"};
+    public static String[] swIPAddrList = {"10.0.10.1","10.0.20.1","10.0.30.1","10.0.40.1","10.0.50.1","10.40.0.2"};
     public static short edgeSWList[] = {1,2,3,0,0,6};
     public static int swCount = swIPAddrList.length;
     //public static Channel clientCh;

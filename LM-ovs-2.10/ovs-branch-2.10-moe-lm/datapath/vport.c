@@ -67,6 +67,10 @@
  * Update 2019/06/23
  *              Update history: LM-MEC(2019) v1.3.6
  *			Why it search cache if dst IP is SWIP?.
+ *
+ * Update 2020/02/23
+ *              Update history: LM-MEC(2019) v1.3.7
+ *			Mars' ip is changed from 10.64.0.1 to 10.0.40.2.
  */
 
 
@@ -120,12 +124,8 @@
 #define SWITCH_NUMS         6
 //#define SWITCH_NUMS         3
 
-//uint32_t SWITCHS_IP[SWITCH_NUMS] = {16781322, 16785418, 16789514, 19398666, 20054026, 16793610};
-//  10.16.0.1,10.32.0.1,10.48.0.1,10.0.40.1,10.0.50.1,10.64.0.1
-uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 16793610};
-//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.64.0.1
-//uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586,  18087946,  18743306};
-//  10.0.10.1, 10.0.20.1, 10.0.30.1
+uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 33564682};
+//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.40.0.2
 
 static const uint8_t OVS_MODE = OVS_MODE_TESTBED;
 static struct socket* udpsocket = NULL;
@@ -1459,6 +1459,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 //Jaehee modified 2019/06/19
 //Jaehee modified 2019/06/21
 //Jaehee modified 2019/06/23
+//Jaehee modified 2020/02/23
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key)
 {
 	uint8_t switchNum = 0;
@@ -1503,6 +1504,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	protocol = ntohs(*(uint16_t*)(data + ETH_ALEN*2));
 	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
+	/*
 	if (senderType == SENDERTYPE_UE) {
 		if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa && data[ETH_ALEN+3] == 0xa6 && data[ETH_ALEN+4] == 0x22 && data[ETH_ALEN+5] == 0x2c) {
 		}
@@ -1515,7 +1517,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 		
 		if(LOGGING){os_WriteLog("Either red or blue. Check new UE.");}
-	}
+	}*/
 
 	data += ETH_HLEN;
 
