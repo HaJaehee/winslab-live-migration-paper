@@ -1,0 +1,76 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug em1
+iface em1 inet static
+address 192.168.0.13
+netmask 255.255.255.0
+gateway 192.168.0.1
+dns-nameservers 192.168.0.1
+
+allow-hotplug p1p1
+iface p1p1 inet manual
+hwaddress ether 20:00:00:00:02:01
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+allow-hotplug p1p2
+iface p1p2 inet manual
+hwaddress ether 20:00:00:00:02:02
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+auto s3
+iface s3 inet static
+	address 10.0.30.1
+	netmask 255.0.0.0
+	mtu 1500
+#wired ethernet
+#auto eth0
+#iface eth0 inet static
+#        address 192.168.0.103
+#        netmask 255.255.255.0
+#        gateway 192.168.0.1
+#        dns-nameservers 8.8.8.8
+# wifi adapter
+auto wlan0
+allow-hotplog wlan0
+	iface wlan0 inet static
+	hwaddress ether 20:00:00:00:02:10
+        address 10.48.0.1
+        netmask 255.0.0.0
+auto wlan1
+allow-hotplog wlan1
+	iface wlan1 inet static
+	hwaddress ether 20:00:00:00:02:11
+        address 10.49.0.1
+        netmask 255.255.0.0
+
+#auto br0
+#	iface br0 inet static
+#	address 10.48.0.1
+#	netmask 255.0.0.0
+#	network 10.48.0.0
+#	gateway 10.48.0.1
+#	dns-nameservers 8.8.8.8
+#	bridge_ports wlan0
+#	bridge_stp off
+#	bridge_fd 0
+#	bridge_maxwait 0
+#auto br1
+#	iface br1 inet static
+#	address 10.49.0.1
+#	netmask 255.255.0.0
+#	network 10.49.0.0
+#	gateway 10.49.0.1
+#	dns-nameservers 8.8.8.8
+#	bridge_ports wlan1
+#	bridge_stp off
+#	bridge_fd 0
+#	bridge_maxwait 0
+

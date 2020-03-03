@@ -1,0 +1,86 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug em1
+iface em1 inet static
+address 192.168.0.12
+netmask 255.255.255.0
+gateway 192.168.0.1
+dns-nameservers 192.168.0.1
+
+allow-hotplug p1p1
+iface p1p1 inet manual
+hwaddress ether 20:00:00:00:01:01
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+allow-hotplug p1p2
+iface p1p2 inet manual
+hwaddress ether 20:00:00:00:01:02
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+allow-hotplug p4p1
+iface p4p1 inet manual
+hwaddress ether 20:00:00:00:01:03
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+allow-hotplug p4p2
+iface p4p2 inet manual
+hwaddress ether 20:00:00:00:01:04
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+mtu 1500
+
+auto wlan0
+    allow-hotplug wlan0
+    iface wlan0 inet static
+    address 10.32.0.1
+    netmask 255.0.0.0
+    hwaddress ether 20:00:00:00:01:10
+
+#auto br0
+#	iface br0 inet static
+#	address 10.32.0.1
+#	netmask 255.0.0.0
+#	network 10.0.0.0
+#	gateway 10.32.0.1
+#	dns-nameservers 8.8.8.8
+#	bridge_ports wlan0
+#	bridge_stp off
+#	bridge_fd 0
+#	bridge_maxwait 0
+
+auto wlan1
+    allow-hotplug wlan1
+    iface wlan1 inet static
+    address 10.33.0.1
+    netmask 255.255.0.0
+    hwaddress ether 20:00:00:00:01:11
+
+#auto br1
+#    iface br1 inet static
+#    address 10.33.0.1
+#    netmask 255.255.0.0
+#    network 10.33.0.0
+#    gateway 10.33.0.1
+#    dns-nameservers 8.8.8.8
+#    bridge_ports wlan1
+#    bridge_stp off
+#    bridge_fd 0
+#    bridge_maxwait 0
+
+auto s2
+iface s2 inet static
+address 10.0.20.1
+netmask 255.0.0.0
+mtu 1500

@@ -1,0 +1,95 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug em1
+iface em1 inet static
+address 192.168.0.16
+netmask 255.255.255.0
+gateway 192.168.0.1
+dns-nameservers 192.168.0.1
+
+
+#allow-ovs s6
+#iface s6 inet static
+#address 10.64.0.1
+#netmask 255.0.0.0
+#ovs-type OVSBridge
+#ovs-ports p1p1,p1p2,p4p1
+
+
+allow-hotplug p1p1
+iface p1p1 inet manual
+hwaddress ether 20:00:00:00:05:01
+mtu 1500
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+
+allow-hotplug p1p2
+iface p1p2 inet manual
+hwaddress ether 20:00:00:00:05:02
+mtu 1500
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+
+allow-hotplug p4p1
+iface p4p1 inet manual
+hwaddress ether 20:00:00:00:05:03
+mtu 1500
+pre-up ifconfig $IFACE up
+post-down ifconfig $IFACE down
+
+auto s6
+#allow-ovs s6
+iface s6 inet static
+address 10.0.40.2
+netmask 255.0.0.0
+mtu 1500
+
+# wireless wifi adapter
+auto wlan0
+allow-hotplog wlan0
+iface wlan0 inet static 
+hwaddress ether 20:00:00:00:05:10
+address 10.64.0.1
+netmask 255.255.0.0
+
+# bridge for wifi adapter
+#auto br0
+#        iface br0 inet static
+#        address 10.65.0.1
+#        netmask 255.255.0.0
+#        network 10.65.0.0
+#        gateway 10.65.0.1
+#        dns-nameservers 8.8.8.8
+#        bridge_ports wlan0
+#        bridge_stp off
+#        bridge_fd 0
+#        bridge_maxwait 0 
+
+# wireless wifi adapter
+#auto wlan1
+#allow-hotplog wlan1
+#iface wlan1 inet static 
+#hwaddress ether 20:00:00:00:05:11
+#address 10.66.0.1
+#netmask 255.255.0.0
+
+# bridge for wifi adapter
+#auto br1
+#        iface br1 inet static
+#        address 10.66.0.1
+#        netmask 255.255.0.0
+#        network 10.66.0.0
+#        gateway 10.66.0.1
+#        dns-nameservers 8.8.8.8
+#        bridge_ports wlan1
+#        bridge_stp off
+#        bridge_fd 0
+#        bridge_maxwait 0 
+
+

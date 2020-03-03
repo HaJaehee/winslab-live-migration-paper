@@ -1,0 +1,137 @@
+#!/bin/bash
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# in port 1
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.30.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.21.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.10.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.48.0.0/12 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.64.0.0/12 actions=mod_dl_src:20:00:00:00:05:03,mod_dl_dst:10:00:00:00:05:01,dec_ttl,output:3"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.66.0.1/16 actions=mod_dl_src:20:00:00:00:05:11,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:5"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.50.1 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.32.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.16.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:1"
+
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.40.2 actions=output:LOCAL"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.64.0.1 actions=mod_nw_dst:10.0.40.2, resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.0.50.2 actions=mod_nw_dst:10.0.40.2, resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.65.0.1 actions=mod_nw_dst:10.64.0.1, resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.66.0.1 actions=mod_nw_dst:10.64.0.1, resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=1, dl_dst=20:00:00:00:05:01, nw_dst=10.64.0.3/32 actions=mod_dl_src:20:00:00:00:05:10,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:4"
+#
+
+# in port 2
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.0.41.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.0.10.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.16.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.32.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.64.0.0/12 actions=mod_dl_src:20:00:00:00:05:03,mod_dl_dst:10:00:00:00:05:01,dec_ttl,output:3"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.0.40.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.65.0.1/16 actions=mod_dl_src:20:00:00:00:05:10,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:4"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.64.0.1 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.0.50.2 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.0.40.2 actions=mod_dl_dst:20:00:00:00:05:01,output:LOCAL"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.65.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=2, dl_dst=20:00:00:00:05:02, nw_dst=10.66.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,ip,in_port=2,dl_dst=20:00:00:00:05:02,nw_dst=10.66.0.1/16 actions=mod_dl_src:20:00:00:00:05:11,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:5"
+
+#
+
+
+# in port 3
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.20.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.10.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:02, nw_dst=10.0.20.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.30.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.41.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.41.2 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.21.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.16.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.48.0.0/12 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.32.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.50.1 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.40.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.64.0.1 actions= mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.50.2 actions= mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.0.40.2 actions= mod_dl_dst:20:00:00:00:05:01, output:LOCAL"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.64.0.0/12 actions=mod_dl_src:20:00:00:00:05:03,mod_dl_dst:10:00:00:00:05:01,dec_ttl,output:3"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip ,in_port=3, dl_dst=20:00:00:00:05:03, nw_dst=10.65.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,ip,in_port=3,dl_dst=20:00:00:00:05:03,nw_dst=10.66.0.1/16 actions=mod_dl_src:20:00:00:00:05:11,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:5"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,arp,in_port=3,arp_tpa=10.0.0.0/8 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],mod_dl_src:20:00:00:00:05:03,load:0x2->NXM_OF_ARP_OP[],move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]->NXM_NX_REG0[],move:NXM_OF_ARP_TPA[]->NXM_OF_ARP_SPA[],load:0x200000000503->NXM_NX_ARP_SHA[],move:NXM_NX_REG0[]->NXM_OF_ARP_TPA[],IN_PORT"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,ip,in_port=3,dl_dst=20:00:00:00:05:03,nw_dst=10.64.0.5/32 actions=mod_dl_src:20:00:00:00:05:10,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:4"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=3,dl_dst=20:00:00:00:05:03,nw_dst=10.66.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#
+
+# in port 4
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.10.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.20.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.40.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.41.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.16.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.32.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,dec_ttl,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.21.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.30.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.41.2 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.50.1 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.48.0.0/12 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,dec_ttl,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,  ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.64.0.0/12 actions=mod_dl_src:20:00:00:00:05:03,mod_dl_dst:10:00:00:00:05:01,dec_ttl,output:3"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.64.0.1 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.60.2 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.0.40.2 actions=mod_dl_dst:20:00:00:00:05:01, output:LOCAL"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.66.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.65.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65534,arp,in_port=4,arp_tpa=10.0.0.0/8 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],mod_dl_src:20:00:00:00:05:10,load:0x2->NXM_OF_ARP_OP[],move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]->NXM_NX_REG0[],move:NXM_OF_ARP_TPA[]->NXM_OF_ARP_SPA[],load:0x200000000510->NXM_NX_ARP_SHA[],move:NXM_NX_REG0[]->NXM_OF_ARP_TPA[],IN_PORT"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,ip,in_port=4,dl_dst=20:00:00:00:05:10,nw_dst=10.66.0.1/16 actions=mod_dl_src:20:00:00:00:05:11,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:5"
+#
+
+# in port local
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.20.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.10.0/24 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.30.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.41.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.41.2 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=640,  ip, in_port=LOCAL,nw_dst=10.0.21.0/24 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=LOCAL,nw_dst=10.16.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=LOCAL,nw_dst=10.48.0.0/12 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=LOCAL,nw_dst=10.32.0.0/12 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=LOCAL,nw_dst=10.0.50.1 actions=mod_dl_src:20:00:00:00:05:02,mod_dl_dst:20:00:00:00:04:02,output:2"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=LOCAL,nw_dst=10.64.0.0/12 actions=mod_dl_src:20:00:00:00:05:03,mod_dl_dst:10:00:00:00:05:01,output:3"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=720,  ip, in_port=LOCAL,nw_dst=10.0.40.1 actions=mod_dl_src:20:00:00:00:05:01,mod_dl_dst:20:00:00:00:03:01,output:1"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=LOCAL,nw_dst=10.64.0.1 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=LOCAL,nw_dst=10.0.50.2 actions=mod_nw_dst:10.0.40.2,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=LOCAL,nw_dst=10.0.40.2 actions=output:LOCAL"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=LOCAL,nw_dst=10.64.0.5/32 actions=mod_dl_src:20:00:00:00:05:10,mod_dl_dst:50:3e:aa:a6:22:2c,output:4"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=520,  ip, in_port=LOCAL,nw_dst=10.66.0.1/16 actions=mod_dl_src:20:00:00:00:05:11,mod_dl_dst:50:3e:aa:a6:22:2c,output:5"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=LOCAL,nw_dst=10.65.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,ip, in_port=LOCAL,nw_dst=10.66.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65535,arp,in_port=LOCAL,arp_tpa=10.0.0.0/8 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],mod_dl_src:20:00:00:00:05:01,load:0x2->NXM_OF_ARP_OP[],move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]->NXM_NX_REG0[],move:NXM_OF_ARP_TPA[]->NXM_OF_ARP_SPA[],load:0x200000000501->NXM_NX_ARP_SHA[],move:NXM_NX_REG0[]->NXM_OF_ARP_TPA[],IN_PORT"
+#
+
+
+/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=10 actions=drop"
+
+
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=5,dl_dst=20:00:00:00:05:11,nw_dst=10.65.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=65535,ip,in_port=5,dl_dst=20:00:00:00:05:11,nw_dst=10.66.0.1 actions=mod_dl_dst:20:00:00:00:05:01,mod_nw_dst:10.64.0.1,resubmit(,0)"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0,priority=520,ip,in_port=5,dl_dst=20:00:00:00:05:11,nw_dst=10.65.0.1/16 actions=mod_dl_src:20:00:00:00:05:10,mod_dl_dst:50:3e:aa:a6:22:2c,dec_ttl,output:4"
+#/usr/local/bin/ovs-ofctl add-flow s6 "table=0, priority=65534,arp,in_port=5,arp_tpa=10.0.0.0/8 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],mod_dl_src:20:00:00:00:05:11,load:0x2->NXM_OF_ARP_OP[],move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]->NXM_NX_REG0[],move:NXM_OF_ARP_TPA[]->NXM_OF_ARP_SPA[],load:0x200000000511->NXM_NX_ARP_SHA[],move:NXM_NX_REG0[]->NXM_OF_ARP_TPA[],IN_PORT"
+
+/home/wins/jaehee/run1.sh
+
+/sbin/ethtool --offload s6 rx off tx off
+/sbin/ethtool --offload p1p1 rx off tx off
+/sbin/ethtool --offload p1p2 rx off tx off
+/sbin/ethtool --offload p4p1 rx off tx off
+
+exit 0
+
