@@ -71,6 +71,14 @@
  * Update 2020/02/23
  *              Update history: LM-MEC(2019) v1.3.7
  *			Mars' ip is changed from 10.64.0.1 to 10.0.40.2.
+ *
+ * Update 2020/03/03
+ *              Update history: LM-MEC(2019) v1.3.8
+ *			IEEE 802.11 frame inter-operability.
+ *
+ * Update 2020/03/04
+ *              Update history: LM-MEC(2019) v1.3.9
+ *			Switch IPs are rollback.
  */
 
 
@@ -124,8 +132,10 @@
 #define SWITCH_NUMS         6
 //#define SWITCH_NUMS         3
 
-uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 36175882};
+//uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 36175882};
 //  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.0.40.2
+uint32_t SWITCHS_IP[SWITCH_NUMS] = {16781322, 16785418, 16789505, 19398666, 20054026, 16793610};
+//  10.16.0.1,10.32.0.1,10.48.0.1,10.0.40.1,10.0.50.1,10.64.0.1
 
 static const uint8_t OVS_MODE = OVS_MODE_TESTBED;
 static struct socket* udpsocket = NULL;
@@ -873,7 +883,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 	uint8_t* data = NULL;
 	uint16_t len = 0, temp = 0;
 	uint16_t org_tp_check = 0;
-	uint32_t oldSrcIP = 0;
+	uint32_t oldSrcIP = 0, changedDstIp = 0;
 	uint16_t pre16 = 0, post16 = 0;
 	uint32_t sum = 0;
 	int i = 0;
@@ -904,6 +914,8 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		memcpy(data + 10, (void*)"\x0000", 2);
 		memcpy(&oldSrcIP, data + 12, sizeof(uint32_t));
 		memcpy(data + 16, (void*)&esIP, sizeof(esIP));
+		changedDstIp = *(uint32_t*)(data + 16);
+		if(LOGGING){os_WriteLog4("Changed packet's destination IP=%u.%u.%u.%u\n",*((uint8_t*)&changedDstIp + 0), *((uint8_t*)&changedDstIp + 1), *((uint8_t*)&changedDstIp + 2), *((uint8_t*)&changedDstIp + 3) );}
 		if(LOGGING){os_WriteLog("--3--Inserting OID.\n");}
 		memcpy(data + IP_HLEN + 0, (void*)"\x00", 1);
 		memcpy(data + IP_HLEN + 1, (void*)"\x24", 1); // option field length
@@ -1460,6 +1472,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 //Jaehee modified 2019/06/21
 //Jaehee modified 2019/06/23
 //Jaehee modified 2020/02/23
+//Jaehee modified 2020/03/03
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key)
 {
 	uint8_t switchNum = 0;
@@ -1487,9 +1500,9 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 	if (LOGGING){os_WriteLog("A new packet.\n");}
 	switchNum = moe_GetSwitchNum(skb);
-	if (switchNum > SWITCH_NUMS) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+	if (switchNum > SWITCH_NUMS) {if(LOGGING){os_WriteLog("switchNum is over. Forwarding.");} return DO_FORWARD;}
 	switchType = SW_TYPES[switchNum-1];
-	if (switchType != SWITCHTYPE_ES) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+	if (switchType != SWITCHTYPE_ES) {if(LOGGING){os_WriteLog("switchType is IMS. Forwarding.");} return DO_FORWARD;}
 
 	data = skb->data;
 
@@ -1497,7 +1510,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	if (data[ETH_ALEN+0] == 0x10 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa ) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x20 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_SW;}
-	if (senderType == SENDERTYPE_NONE) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+	if (senderType == SENDERTYPE_NONE) {if(LOGGING){os_WriteLog("senderType is NONE. Forwarding.");} return DO_FORWARD;}
 
 
 	 
@@ -1520,6 +1533,8 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	}*/
 
 	data += ETH_HLEN;
+
+	os_WriteLog("I'm alive! 3");
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
 		if(LOGGING){os_WriteLog("ARP of new UE. Do nothing.\n");}
@@ -1889,7 +1904,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.6 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.9 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
@@ -2330,7 +2345,7 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 {
 	struct sw_flow_key key;
 	int error;
-
+	os_WriteLog("I'm alive! 1");
 	// LOHan: Statistics Support
 	/*uint8_t switchNum = moe_GetSwitchNum(skb);
 	do_gettimeofday(&START_TIME);*/
@@ -2356,7 +2371,8 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 		kfree_skb(skb);
 		return error;
 	}
-
+	os_WriteLog("I'm alive! 2");
+	os_WriteLog1("mac_len: %d",skb->mac_len);
 	// LOHan: Load Balancing Support
 	/*if (switchNum == 7) {
 		uint8_t randnum = os_myRand() % 16;

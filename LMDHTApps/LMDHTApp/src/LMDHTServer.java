@@ -43,9 +43,13 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 
-
+/*
+ * Update 2020/03/04
+ *              Update history: LM-MEC(2019) v1.3.9
+ *			Switch IPs are rollback.
+ */
 public final class LMDHTServer {
-    public static String[] swIPAddrList = {"10.0.10.1","10.0.20.1","10.0.30.1","10.0.40.1","10.0.50.1","10.40.0.2"};
+    public static String[] swIPAddrList = {"10.16.0.1","10.32.0.1","10.48.0.1","10.0.40.1","10.0.50.1","10.64.0.1"};
     public static short edgeSWList[] = {1,2,3,0,0,6};
     public static int swCount = swIPAddrList.length;
     //public static Channel clientCh;
