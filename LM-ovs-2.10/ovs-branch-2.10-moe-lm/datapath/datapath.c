@@ -15,6 +15,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA
  */
+ 
+ /*
+ *
+ * Update 2020/03/04
+ *              Update history: LM-MEC(2019) v1.3.9
+ *			Switch IPs are rollback.
+ */
+
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
@@ -62,6 +70,8 @@
 #include "gso.h"
 #include "vport-internal_dev.h"
 #include "vport-netdev.h"
+
+#include "ovsApi.h"
 
 unsigned int ovs_net_id __read_mostly;
 
@@ -229,8 +239,9 @@ void ovs_dp_detach_port(struct vport *p)
 	ovs_vport_del(p);
 }
 
+//Jaehee modified 2020/03/06
 /* Must be called with rcu_read_lock. */
-void ovs_dp_process_packet(struct sk_buff *skb, struct sw_flow_key *key)
+void ovs_dp_process_packet2(struct sk_buff *skb, struct sw_flow_key *key, int isHandled)
 {
 	const struct vport *p = OVS_CB(skb)->input_vport;
 	struct datapath *dp = p->dp;
@@ -245,7 +256,7 @@ void ovs_dp_process_packet(struct sk_buff *skb, struct sw_flow_key *key)
 	/* Look up flow. */
 	flow = ovs_flow_tbl_lookup_stats(&dp->table, key, skb_get_hash(skb),
 					 &n_mask_hit);
-	if (unlikely(!flow)) {
+	if (unlikely(!flow) || isHandled == DO_FORWARD_AFTER_HANDLING) {
 		struct dp_upcall_info upcall;
 		int error;
 
@@ -274,6 +285,13 @@ out:
 	(*stats_counter)++;
 	stats->n_mask_hit += n_mask_hit;
 	u64_stats_update_end(&stats->syncp);
+}
+
+//Jaehee modified 2020/03/06
+/* Must be called with rcu_read_lock. */
+void ovs_dp_process_packet(struct sk_buff *skb, struct sw_flow_key *key)
+{
+	ovs_dp_process_packet2(skb, key, DO_FORWARD);
 }
 
 int ovs_dp_upcall(struct datapath *dp, struct sk_buff *skb,

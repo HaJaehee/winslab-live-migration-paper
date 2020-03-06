@@ -132,9 +132,9 @@
 #define SWITCH_NUMS         6
 //#define SWITCH_NUMS         3
 
-//uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 36175882};
-//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.0.40.2
-uint32_t SWITCHS_IP[SWITCH_NUMS] = {16781322, 16785418, 16789505, 19398666, 20054026, 16793610};
+uint32_t SWITCHS_IP[SWITCH_NUMS] = {17432586, 18087946, 18743306, 19398666, 20054026, 16793610};
+//  10.0.10.1,10.0.20.1,10.0.30.1,10.0.40.1,10.0.50.1,10.64.0.1
+//uint32_t SWITCHS_IP[SWITCH_NUMS] = {16781322, 16785418, 16789505, 19398666, 20054026, 16793610};
 //  10.16.0.1,10.32.0.1,10.48.0.1,10.0.40.1,10.0.50.1,10.64.0.1
 
 static const uint8_t OVS_MODE = OVS_MODE_TESTBED;
@@ -878,6 +878,7 @@ static void moe_CheckNewUE(const uint8_t switchNum, const uint16_t protocol, uin
 //Jaehee modified 2018/02/19
 //Jaehee modified 2018/02/20
 //Jaehee modified 2019/06/21
+//Jaehee modified 2020/03/05
 static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* hashed, uint32_t esIP, int proto, int doInsertObjID)
 {
 	uint8_t* data = NULL;
@@ -894,14 +895,22 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		if (skb_cow_head(skb, MOE_HLEN) < 0){
 			return -1;
 		}
-
+		
+		
+		if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+		len = skb->len;
 		if(LOGGING){os_WriteLog("--0--skb_put().\n");}
 		skb_put(skb, MOE_HLEN);
+		if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+
 		/* Move the data to the beginning of the new data position. */
-		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, skb->len - ETH_HLEN - IP_HLEN);
+		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, len - ETH_HLEN - IP_HLEN);
 		
 		data = skb->data + ETH_HLEN;
-
+		len = 0;
+		
 		if(LOGGING){os_WriteLog("--1--Header extension.\n");}
 		memcpy(data + 0, (void*)"\x4E", 1);
 		len = ntohs(*(uint16_t*)(data + 2));
@@ -909,6 +918,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		len = htons(len + MOE_HLEN);
 		if(LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
 		memcpy(data + 2, (void*)&len, 2);
+		
 
 		if(LOGGING){os_WriteLog("--2--Changing dst IP.\n");}
 		memcpy(data + 10, (void*)"\x0000", 2);
@@ -1115,12 +1125,13 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 	}*/
 
 
-	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
 //Jaehee modified 2017/09/30
 //Jaehee modified 2018/02/20
 //Jaehee modified 2019/06/21
+//Jaehee modified 2020/03/05
 static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t newIP, int proto)
 {
 	uint8_t* data = NULL;
@@ -1133,10 +1144,14 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 	//int psize = 0;
 	//char *pseudogram = NULL;
 	//if(LOGGING){print_hex_dump(KERN_ALERT, "(pre)skb->data ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, ntohs(*(uint16_t*)(skb->data + 2 + ETH_HLEN))+ETH_HLEN, 1);}
+	if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 	if(LOGGING){os_WriteLog("Removing header operation.\n");}
-
 	memmove(skb->data + MOE_HLEN, skb->data, ETH_HLEN + IP_HLEN);
 	skb_pull(skb, MOE_HLEN);
+	if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+	
 	data = skb->data + ETH_HLEN;
 
 	memcpy(data + 0, (void*)"\x45", 1);
@@ -1368,10 +1383,12 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 		if(LOGGING){os_WriteLog("-----END after change IP-----\n");}
 	}
 	*/
+	
+	
+	
 
 
-
-	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
 //Jaehee & Jaehyun modified ---
@@ -2330,6 +2347,7 @@ u32 ovs_vport_find_upcall_portid(const struct vport *vport, struct sk_buff *skb)
 	return ids->ids[ids_index];
 }
 
+//Jaehee modified 2020/03/06
 /**
  *	ovs_vport_receive - pass up received packet to the datapath for processing
  *
@@ -2345,6 +2363,8 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 {
 	struct sw_flow_key key;
 	int error;
+	int operation;
+	
 	os_WriteLog("I'm alive! 1");
 	// LOHan: Statistics Support
 	/*uint8_t switchNum = moe_GetSwitchNum(skb);
@@ -2382,9 +2402,18 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 			if (moe_CheckHeader(vport, skb, &key) == -1) return;
 		}
 	}
-	 else */if (moe_CheckHeader(vport, skb, &key) == -1) {return;}
-	if(LOGGING){os_WriteLog("Processing packet.");}
-	ovs_dp_process_packet(skb, &key);
+	 else */
+	operation = moe_CheckHeader(vport, skb, &key);
+	if (operation == DO_NOT_FORWARD) {return;}
+	else if (operation == DO_FORWARD) {
+		if(LOGGING){os_WriteLog("Processing packet.");}
+		ovs_dp_process_packet(skb, &key);
+	}
+	else if (operation == DO_FORWARD_AFTER_HANDLING) {
+		if(LOGGING){os_WriteLog("Processing packet after handling.");}
+		ovs_dp_process_packet2(skb, &key, DO_FORWARD_AFTER_HANDLING);
+	}
+		
 	// LOHan: Statistics Support
 	/*do_gettimeofday(&END_TIME);
 	if (END_TIME.tv_usec >= START_TIME.tv_usec) {

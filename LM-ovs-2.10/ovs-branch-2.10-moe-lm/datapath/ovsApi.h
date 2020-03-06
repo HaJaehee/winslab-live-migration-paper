@@ -3,6 +3,13 @@
 
 #include <linux/types.h>
 
+ /*
+ *
+ * Update 2020/03/04
+ *              Update history: LM-MEC(2019) v1.3.9
+ *			Switch IPs are rollback.
+ */
+
 #define IP_HLEN		20  // IP option header: 4bit+additional bit
 #define MOE_HLEN	36 //SHA-256
 #define HASH_LEN	32 //SHA-256
@@ -38,6 +45,7 @@
 
 #define DO_NOT_FORWARD      -1
 #define DO_FORWARD          0
+#define DO_FORWARD_AFTER_HANDLING	1
 
 void os_mySrand(uint32_t seed);
 uint32_t os_myRand(void);

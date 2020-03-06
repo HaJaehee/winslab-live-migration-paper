@@ -15,6 +15,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA
  */
+ 
+/*
+ *
+ * Update 2020/03/04
+ *              Update history: LM-MEC(2019) v1.3.9
+ *			Switch IPs are rollback.
+ */
 
 #ifndef DATAPATH_H
 #define DATAPATH_H 1
@@ -240,6 +247,7 @@ extern struct genl_family dp_vport_genl_family;
 extern struct genl_multicast_group ovs_dp_vport_multicast_group;
 
 void ovs_dp_process_packet(struct sk_buff *skb, struct sw_flow_key *key);
+void ovs_dp_process_packet2(struct sk_buff *skb, struct sw_flow_key *key, int isHandled);
 void ovs_dp_detach_port(struct vport *);
 int ovs_dp_upcall(struct datapath *, struct sk_buff *,
 		  const struct sw_flow_key *, const struct dp_upcall_info *,

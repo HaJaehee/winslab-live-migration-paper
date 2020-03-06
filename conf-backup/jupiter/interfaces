@@ -31,7 +31,7 @@ post-down ifconfig $IFACE down
 auto wlan0
     allow-hotplog wlan0
     iface wlan0 inet static 
-    address 10.16.0.1
+    address 10.16.1.1
     netmask 255.0.0.0
     hwaddress ether 20:00:00:00:00:10
    

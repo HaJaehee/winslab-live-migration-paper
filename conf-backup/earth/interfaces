@@ -44,7 +44,7 @@ mtu 1500
 auto wlan0
     allow-hotplug wlan0
     iface wlan0 inet static
-    address 10.32.0.1
+    address 10.32.1.1
     netmask 255.0.0.0
     hwaddress ether 20:00:00:00:01:10
 
@@ -60,12 +60,12 @@ auto wlan0
 #	bridge_fd 0
 #	bridge_maxwait 0
 
-auto wlan1
-    allow-hotplug wlan1
-    iface wlan1 inet static
-    address 10.33.0.1
-    netmask 255.255.0.0
-    hwaddress ether 20:00:00:00:01:11
+#auto wlan1
+#    allow-hotplug wlan1
+#    iface wlan1 inet static
+#    address 10.32.2.1
+#    netmask 255.255.0.0
+#    hwaddress ether 20:00:00:00:01:11
 
 #auto br1
 #    iface br1 inet static
