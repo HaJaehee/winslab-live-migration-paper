@@ -28,7 +28,7 @@
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=1,dl_dst=20:00:00:00:00:01,nw_dst=10.16.0.1 actions=mod_nw_dst:10.0.10.1,resubmit(,0)"
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=100,ip,in_port=1,nw_dst=10.0.0.0/8 actions=mod_dl_src:20:00:00:00:00:01,mod_dl_dst:20:00:00:00:03:03,output:1"
 ## br0-wlan0
-/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=1,nw_dst=10.32.0.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
+/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=1,nw_dst=10.32.1.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
 ## 
 #
 
@@ -49,8 +49,9 @@
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=100,ip,in_port=3,nw_dst=10.0.0.0/8 actions=mod_dl_src:20:00:00:00:00:01,mod_dl_dst:20:00:00:00:03:03,output:1"
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=3,dl_dst=20:00:00:00:00:10,nw_dst=10.16.0.1 actions=mod_nw_dst:10.0.10.1,resubmit(,0)"
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=3,dl_dst=20:00:00:00:00:10,nw_dst=10.0.10.1 actions=mod_dl_dst:20:00:00:00:00:01,output:LOCAL"
+/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=3,dl_dst=20:00:00:00:00:10,nw_dst=10.16.1.1 actions=mod_nw_dst:10.0.10.1,resubmit(,0)"
 ## br0-wlan0
-/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=3,nw_dst=10.32.0.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
+/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=3,nw_dst=10.32.1.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
 ##
 #
 
@@ -71,8 +72,9 @@
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=100,ip,in_port=LOCAL,nw_dst=10.0.0.0/8 actions=mod_dl_src:20:00:00:00:00:01,mod_dl_dst:20:00:00:00:03:03,output:1"
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=LOCAL,dl_dst=20:00:00:00:00:01,nw_dst=10.16.0.1 actions=mod_nw_dst:10.0.10.1,resubmit(,0)"
 /usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=LOCAL,dl_dst=20:00:00:00:00:01,nw_dst=10.0.10.1 actions=output:LOCAL"
+/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=LOCAL,dl_dst=20:00:00:00:00:01,nw_dst=10.16.1.1 actions=mod_nw_dst:10.0.10.1,resubmit(,0)"
 ## br0-wlan0
-/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=LOCAL,nw_dst=10.32.0.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
+/usr/local/bin/ovs-ofctl add-flow s1 "table=0, priority=65535,ip,in_port=LOCAL,nw_dst=10.32.1.2 actions=mod_dl_src:20:00:00:00:00:10,mod_dl_dst:50:3e:aa:ae:05:51,output:3"
 ##
 #
 
