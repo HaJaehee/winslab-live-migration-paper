@@ -21,6 +21,10 @@
  * Update 2020/03/04
  *              Update history: LM-MEC(2019) v1.3.9
  *			Switch IPs are rollback.
+ *
+ * Update 2020/03/13
+ *              Update history: LM-MEC(2019) v2.0.0
+ *			Added log on/off and reset.
  */
 
 

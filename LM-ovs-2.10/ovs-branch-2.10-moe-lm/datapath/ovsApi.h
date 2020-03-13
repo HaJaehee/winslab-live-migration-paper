@@ -8,6 +8,10 @@
  * Update 2020/03/04
  *              Update history: LM-MEC(2019) v1.3.9
  *			Switch IPs are rollback.
+ *
+ * Update 2020/03/13
+ *              Update history: LM-MEC(2019) v2.0.0
+ *			Added log on/off and reset.
  */
 
 #define IP_HLEN		20  // IP option header: 4bit+additional bit
@@ -31,10 +35,12 @@
 #define OPCODE_INFORM_CONNECTION    3
 #define OPCODE_APP_MOBILTY          4
 #define OPCODE_CTN_MOBILTY          5
-#define OPCODE_GET_IPPORT               6
-#define OPCODE_TOGGLE_LOGGING             101
+#define OPCODE_GET_IPPORT           6
+
 #define OPCODE_IPC_KRN_APP          10
 #define OPCODE_IPC_APP_KRN          11
+//#define OPCODE_TOGGLE_LOGGING       12
+#define OPCODE_RESET_SWITCH         13
 
 #define OPCODE_SET_SWTYPE   0
 #define OPCODE_QUERIED_HASH 1

@@ -2,6 +2,11 @@
 #include <linux/kernel.h>
 #include <linux/time.h>
 #include <linux/string.h>
+/*
+* Update 2020/03/13
+*              Update history: LM-MEC(2019) v2.0.0
+*			Added log on/off and reset.
+*/
 
 static uint32_t rand_num = 23; // seed number
 

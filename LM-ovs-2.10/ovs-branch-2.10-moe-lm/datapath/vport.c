@@ -79,6 +79,10 @@
  * Update 2020/03/04
  *              Update history: LM-MEC(2019) v1.3.9
  *			Switch IPs are rollback.
+ *
+ * Update 2020/03/13
+ *              Update history: LM-MEC(2019) v2.0.0
+ *			Added log on/off and reset.
  */
 
 
@@ -200,7 +204,7 @@ struct timeval END_TIME;
 struct timeval STAT_TIMES[SWITCH_NUMS];
 uint16_t STAT_NEW_UES[SWITCH_NUMS];
 
-int LOGGING = 1;
+int LOGGING = 0;
 int LOGGING_SEARCH_LATENCY = 0;
 int udpRcvCount=0;
 
@@ -223,7 +227,7 @@ static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP);
 static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_flow_key *key);
 static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* hashed, uint32_t esIP, int proto, int doInsertObjID);
 static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t newIP, int proto);
-unsigned short csum(unsigned short *ptr, int nbytes);
+//unsigned short csum(unsigned short *ptr, int nbytes);
 // ------------------------------------------------------------
 // Jaehee: LM Support End
 // ------------------------------------------------------------
@@ -258,31 +262,32 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 	uint8_t type = 0;
 	struct sk_buff* skb = NULL;
 	uint8_t* tempHash = NULL;
-	uint32_t temp = 0, newmoIP = 0;
+	uint32_t temp = 0, newMOIP = 0;
 	uint16_t destPort = 0;
 
 	struct sockaddr_in server;
 	
 	while ((len = skb_queue_len(&wrapper->sk->sk_receive_queue)) > 0) {
 		if(LOGGING){os_WriteLog1("Worker queue's socket list length=%d.\n",len);}
-		if(LOGGING){os_WriteLog1("Prcessing IPC message count=%d.\n",udpRcvCount);}
+		if(LOGGING){os_WriteLog1("Processing IPC message count=%d.\n",udpRcvCount);}
 		udpRcvCount++;
 		skb = skb_dequeue(&wrapper->sk->sk_receive_queue);
 		opCode = *(uint8_t*)(skb->data);
 		switchNum = *(uint8_t*)(skb->data+ 1);
+		LOGGING = *(uint8_t*)(skb->data+ 5);
 		if(LOGGING){os_WriteLog10("Received data=%u%u%u%u%u%u%u%u%u%u.\n",*((uint8_t*)skb->data + 0),*((uint8_t*)skb->data + 1),*((uint8_t*)skb->data + 2),*((uint8_t*)skb->data + 3),*((uint8_t*)skb->data + 4),*((uint8_t*)skb->data + 5),*((uint8_t*)skb->data + 6),*((uint8_t*)skb->data + 7),*((uint8_t*)skb->data + 8),*((uint8_t*)skb->data + 9));}
 		if(LOGGING){os_WriteLog2("Received a UDP message, opCode=%u, SwitchNum=%u\n", opCode, switchNum);}
 
 
 		if (opCode == OPCODE_SET_SWTYPE) {
-			if(LOGGING){os_WriteLog("OPCODE_SET_SWTYPE\n");}
+			if(LOGGING){os_WriteLog("OPCODE: OPCODE_SET_SWTYPE\n");}
 			i = 0;
 			total = 0;
 			idx = 0;
 			type = *(uint8_t*)(skb->data + 2);
 			total = ntohs(*(uint16_t*)(skb->data + 3));
 			for (i = 0; i < total; i++) {
-				idx = ntohs(*(uint16_t*)(skb->data + 5 + i * sizeof(uint16_t)));
+				idx = ntohs(*(uint16_t*)(skb->data + 6 + i * sizeof(uint16_t)));
 				if (idx != -1){
 					SW_TYPES[idx] = type;
 				}
@@ -294,8 +299,15 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 				if (STAT_TIMES[i].tv_sec != 0 && STAT_TIMES[i].tv_usec != 0){
 			if(LOGGING){os_WriteLog3("SwitchNum=%u, Execution Time=%u.%06d\n", i, STAT_TIMES[i].tv_sec, STAT_TIMES[i].tv_usec);} }} }
 			*/
-		} else if (opCode == OPCODE_QUERIED_HASH) {
-			if(LOGGING){os_WriteLog("OPCODE_QUERIED_HASH\n");}
+		} else if (opCode == OPCODE_RESET_SWITCH) {
+            if(LOGGING){os_WriteLog("OPCODE: OPCODE_RESET_SWITCH\n");}
+		    for (i = 0; i < SWITCH_NUMS; i++) {
+                SW_TYPES[i] = SWITCHTYPE_IMS;
+		    }
+            moe_CleanUp();
+        }
+		else if (opCode == OPCODE_QUERIED_HASH) {
+			if(LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_HASH\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
@@ -310,7 +322,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 				moe_ForwardSKB(switchNum, destIP);
 			}
 		} else if (opCode == OPCODE_QUERIED_IP) {
-			if(LOGGING){os_WriteLog("OPCODE_QUERIED_IP\n");}
+			if(LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_IP\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
@@ -322,7 +334,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 				moe_ForwardSKB(switchNum, switchIP); // Should be the switch's IP
 			}
 		} else if (opCode == OPCODE_UPDATE_IP) {
-			if(LOGGING){os_WriteLog("OPCODE_UPDATE_IP\n");}
+			if(LOGGING){os_WriteLog("OPCODE: OPCODE_UPDATE_IP\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
@@ -346,40 +358,40 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			}
 			/////////////////////////////////////////////////////////////////
 		} else if (opCode == OPCODE_NEW_APP) { // Jaehee: TODO
-			if(LOGGING){os_WriteLog("OPCODE_NEW_APP\n");}
+			if(LOGGING){os_WriteLog("OPCODE: OPCODE_NEW_APP\n");}
 			tempHash = NULL;
-			newmoIP = 0;
+			newMOIP = 0;
 			temp = 0;
 			destPort = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
 			switchIP = *(uint32_t*)(skb->data + 6);
-			newmoIP = *(uint32_t*)(skb->data + 10);
+			newMOIP = *(uint32_t*)(skb->data + 10);
 			destPort = ntohs(*(uint16_t*)(skb->data + 14));
 			//if (moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp) && switchIP != temp) {
 			if(LOGGING){os_WriteLog9("Application Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u with dstPort=%u\n",
 									 *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 									 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);}
 			memcpy(objHash, skb->data + 16, HASH_LEN);
-			moe_InsertObject(switchNum, destIP, destPort, objHash, switchIP, newmoIP);
+			moe_InsertObject(switchNum, destIP, destPort, objHash, switchIP, newMOIP);
 			//}
 		} /*else if (opCode == OPCODE_NEW_CTN) { // Jaehee: Is it necessarily needed?
 			uint8_t* tempHash;
-			uint32_t newmoIP, temp = 0;
+			uint32_t newMOIP, temp = 0;
             uint16_t destPort = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
 			switchIP = *(uint32_t*)(skb->data + 6);
-			newmoIP = *(uint32_t*)(skb->data + 10);
+			newMOIP = *(uint32_t*)(skb->data + 10);
 			if (moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp) && switchIP != temp) {
 				if(LOGGING){os_WriteLog9("Container Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
 					*((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 				*((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3));}
 				memcpy(objHash, skb->data + 14, HASH_LEN);
-				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, newmoIP);
+				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, newMOIP);
 			}
-		}*/
+		}
 		else if (opCode == OPCODE_TOGGLE_LOGGING) {
 			LOGGING=(LOGGING == 0)?1:0;
-		} else if (opCode == 100) {
+		}*/ else if (opCode == 100) {
 			PRT_START_PAGE = *(uint32_t*)(skb->data + 2);
 		}
 		refcount_set(&skb->users,1);
@@ -897,13 +909,13 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		}
 		
 		
-		if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
-		if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 		len = skb->len;
 		if(LOGGING){os_WriteLog("--0--skb_put().\n");}
 		skb_put(skb, MOE_HLEN);
-		if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
-		if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 
 		/* Move the data to the beginning of the new data position. */
 		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, len - ETH_HLEN - IP_HLEN);
@@ -1048,83 +1060,6 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		}
 
 	}
-	/*
-	if (proto != IPPROTO_ICMP && newSrcIP != oldSrcIP) {
-		org_tp_check = kmalloc(sizeof(uint16_t),GFP_KERNEL);
-
-		if (proto == IPPROTO_UDP) {
-			memcpy(org_tp_check, data + IP_HLEN + MOE_HLEN + 6, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(*org_tp_check));}
-		}
-
-		else if (proto == IPPROTO_TCP) {
-			memcpy(org_tp_check, data + IP_HLEN + MOE_HLEN + 16, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(*org_tp_check));}
-		}
-
-		*org_tp_check = ~ntohs(*org_tp_check);
-		if(LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",*org_tp_check);}
-		newSrcIP = ntohl(newSrcIP);
-		oldSrcIP = ntohl(oldSrcIP);
-		if(LOGGING){
-			os_WriteLog1("new src ip addr=%08x\n",newSrcIP);
-			os_WriteLog1("old src ip addr=%08x\n",oldSrcIP);
-		}
-
-		pre16 = (uint16_t) ((newSrcIP & 0xffff0000) >> 16);
-		post16 = (uint16_t) (newSrcIP & 0x0000ffff);
-		if(LOGGING){
-			os_WriteLog1("new src ip preaddr=%04x\n",pre16);
-			os_WriteLog1("new src ip postaddr=%04x\n",post16);
-			}
-
-		if (*org_tp_check < pre16) {
-			sum = *org_tp_check + 0xffff - pre16;
-		}
-		else {
-			sum = *org_tp_check - pre16;
-		}
-		if (sum < post16) {
-			sum = sum + 0xffff - post16;
-		}
-		else {
-			sum = sum - post16;
-		}
-
-		pre16 = (uint16_t) ((oldSrcIP & 0xffff0000) >> 16);
-		post16 = (uint16_t) (oldSrcIP & 0x0000ffff);
-
-		if(LOGGING){
-			os_WriteLog1("old src ip preaddr=%04x\n",pre16);
-			os_WriteLog1("old src ip postaddr=%04x\n",post16);
-			}
-
-		sum += pre16;
-		if (sum>0xffff) {
-			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
-		}
-		sum += post16;
-		if (sum>0xffff) {
-			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
-		}
-
-		if(LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
-
-		*org_tp_check = htons((uint16_t)(~sum));
-
-		if(LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(*org_tp_check ));}
-
-		if (proto == IPPROTO_UDP) {
-			memcpy(data + IP_HLEN + MOE_HLEN + 6, org_tp_check, sizeof(uint16_t));
-		}
-		else if (proto == IPPROTO_TCP) {
-			memcpy(data + IP_HLEN + MOE_HLEN + 16, org_tp_check, sizeof(uint16_t));
-		}
-
-		kfree(org_tp_check);
-	}*/
-
-
 	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
@@ -1144,13 +1079,13 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 	//int psize = 0;
 	//char *pseudogram = NULL;
 	//if(LOGGING){print_hex_dump(KERN_ALERT, "(pre)skb->data ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, ntohs(*(uint16_t*)(skb->data + 2 + ETH_HLEN))+ETH_HLEN, 1);}
-	if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
-	if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+	//if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 	if(LOGGING){os_WriteLog("Removing header operation.\n");}
 	memmove(skb->data + MOE_HLEN, skb->data, ETH_HLEN + IP_HLEN);
 	skb_pull(skb, MOE_HLEN);
-	if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
-	if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+	//if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 	
 	data = skb->data + ETH_HLEN;
 
@@ -1244,155 +1179,12 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 		}
 
 	}
-	/*if (proto != IPPROTO_ICMP && oldIP != newIP) {
-		org_tp_check = kmalloc(sizeof(uint16_t),GFP_KERNEL);
-
-		if (proto == IPPROTO_UDP) {
-			memcpy(org_tp_check, data + IP_HLEN + 6, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(*org_tp_check));}
-		}
-
-		else if (proto == IPPROTO_TCP) {
-			memcpy(org_tp_check, data + IP_HLEN + 16, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(*org_tp_check));}
-		}
-
-		*org_tp_check = ~ntohs(*org_tp_check);
-		if(LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",*org_tp_check);}
-		oldIP = ntohl(oldIP);
-		newIP = ntohl(newIP);
-		if(LOGGING){
-			os_WriteLog1("new dst ip addr=%08x\n",newIP);
-			os_WriteLog1("old dst ip addr=%08x\n",oldIP);
-		}
-
-		pre16 = (uint16_t) ((oldIP & 0xffff0000) >> 16);
-		post16 = (uint16_t) (oldIP & 0x0000ffff);
-		if(LOGGING){
-			os_WriteLog1("old dst ip preaddr=%04x\n",pre16);
-			os_WriteLog1("old dst ip postaddr=%04x\n",post16);}
-
-		if (*org_tp_check < pre16) {
-			sum = *org_tp_check + 0xffff - pre16;
-		}
-		else {
-			sum = *org_tp_check - pre16;
-		}
-		if (sum < post16) {
-			sum = sum + 0xffff - post16;
-		}
-		else {
-			sum = sum - post16;
-		}
-
-		pre16 = (uint16_t) ((newIP & 0xffff0000) >> 16);
-		post16 = (uint16_t) (newIP & 0x0000ffff);
-
-		if(LOGGING){
-			os_WriteLog1("new dst ip preaddr=%04x\n",pre16);
-			os_WriteLog1("new dst ip postaddr=%04x\n",post16);
-			}
-
-		sum += pre16;
-		if (sum>0xffff) {
-			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
-		}
-		sum += post16;
-		if (sum>0xffff) {
-			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
-		}
-
-		if(LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
-
-		*org_tp_check = htons((uint16_t)(~sum));
-
-		if(LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(*org_tp_check ));}
-
-		if (proto == IPPROTO_UDP) {
-			memcpy(data + IP_HLEN + 6, org_tp_check, sizeof(uint16_t));
-		}
-		else if (proto == IPPROTO_TCP) {
-			memcpy(data + IP_HLEN + 16, org_tp_check, sizeof(uint16_t));
-		}
-
-		kfree(org_tp_check);
-
-	}*/
-
-	//---ancient legacy---by Jaehee
-	/*
-    if (!is_icmp){
-
-		if(LOGGING){os_WriteLog("received tcp segment\n");}
-		if(LOGGING){os_WriteLog("-----after change IP-----\n");}
-
-		org_tp_check = kmalloc(sizeof(uint16_t),GFP_KERNEL);
-		memcpy(org_tp_check, data + IP_HLEN + 16, sizeof(uint16_t));
-		if(LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(*org_tp_check));}
-		//memcpy(data + IP_HLEN + 16, (void*)"\x0000",2);  //checksum = 0
-
-
-
-		memcpy(&psh.source_address,(uint32_t*)(data + 12), 4);
-		memcpy(&psh.dest_address, (uint32_t*)(data + 16), 4);
-		if(LOGGING){os_WriteLog1("ip saddr=%08x\n",psh.source_address);}
-		if(LOGGING){os_WriteLog1("ip daddr=%08x\n",psh.dest_address);}
-		psh.placeholder = 0;
-		psh.protocol = IPPROTO_TCP;
-		psh.tcp_length = htons(ntohs(len) - IP_HLEN);
-		if(LOGGING){os_WriteLog1("tcp_length=%d\n",psh.tcp_length);}
-		psize = sizeof(struct pseudo_header) + ntohs(len) - IP_HLEN;
-		pseudogram = kmalloc(psize,GFP_KERNEL);
-
-		memcpy(pseudogram, (char*) &psh, sizeof (struct pseudo_header));
-		memcpy(pseudogram + sizeof(struct pseudo_header), data + IP_HLEN, ntohs(len) - IP_HLEN);
-		tcp_check = csum((unsigned short*) pseudogram, psize);
-		if(LOGGING){os_WriteLog1("manual tcp checksum=%04x\n",tcp_check);}
-		//memcpy(data + IP_HLEN + 16, (void*)&tcp_check, sizeof(tcp_check));
-
-		//if(LOGGING){print_hex_dump(KERN_ALERT, "data ", DUMP_PREFIX_OFFSET, 16, 1, data, ntohs(len)+ETH_HLEN, 1);}
-		kfree(pseudogram);
-		kfree(org_tp_check);
-
-
-
-		if(LOGGING){os_WriteLog1("original skb csum=%04x\n",skb->csum);}
-		struct iphdr *iph;
-        struct tcphdr *tcph;
-        int tcplen = ntohs(len) - IP_HLEN;
-		if(LOGGING){os_WriteLog1("tcp seg length=%d\n",tcplen);}
-        iph = (struct iphdr *)data;
-        tcph = (struct tcphdr *)(data + IP_HLEN);
-        tcph->check = 0;
-		if(LOGGING){os_WriteLog1("zero tcp checksum=%4x\n",tcph->check);}
-        csum_p = csum_partial((char *)tcph, tcplen, 0);
-        tcph->check = tcp_v4_check(tcplen, iph->saddr, iph->daddr, csum_p);
-		if(LOGGING){os_WriteLog1("csum partial=%04x\n",csum_p);}
-		if(LOGGING){os_WriteLog1("ip saddr=%08x\n",iph->saddr);}
-		if(LOGGING){os_WriteLog1("ip daddr=%08x\n",iph->daddr);}
-		if(LOGGING){os_WriteLog1("ip hdr len=%d\n",iph->ihl);}
-		if(LOGGING){os_WriteLog1("ip tot len=%d\n",ntohs(iph->tot_len));}
-		if(LOGGING){os_WriteLog1("tcp src=%d\n",ntohs(tcph->source));}
-		if(LOGGING){os_WriteLog1("tcp dst=%d\n",ntohs(tcph->dest));}
-		tcph_len = (*(uint8_t*)(data + IP_HLEN + 12) & 0xf0) >> 4;
-		if(LOGGING){os_WriteLog1("tcp hdr len=%x\n",tcph_len);}
-		if(LOGGING){os_WriteLog1("kern api tcp checksum=%04x\n",ntohs(tcph->check));}
-		if(LOGGING){print_hex_dump(KERN_ALERT, "data ", DUMP_PREFIX_OFFSET, 16, 1, data + IP_HLEN + (tcph_len*4), ntohs(len) - IP_HLEN - (tcph_len*4), 1);}
-		kfree(org_tp_check);
-
-		if(LOGGING){os_WriteLog("-----END after change IP-----\n");}
-	}
-	*/
-	
-	
-	
-
 
 	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
 //Jaehee & Jaehyun modified ---
-unsigned short csum(unsigned short *ptr, int nbytes)
+/*unsigned short csum(unsigned short *ptr, int nbytes)
 {
 	register long sum;
 	unsigned short oddbyte;
@@ -1415,9 +1207,8 @@ unsigned short csum(unsigned short *ptr, int nbytes)
 	answer=(short)~sum;
 	return answer;
 
-}
-
-
+}*/
+/*
 uint16_t tcp_checksum(const void *buff, size_t len, uint32_t src_addr, uint32_t dest_addr)
 {
 	const uint16_t *buf=buff;
@@ -1455,7 +1246,7 @@ uint16_t tcp_checksum(const void *buff, size_t len, uint32_t src_addr, uint32_t 
 	return ( (uint16_t)(~sum)  );
 }
 //Jaehee & Jaehyun modified End ---
-
+*/
 
 static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 {
@@ -1550,8 +1341,6 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	}*/
 
 	data += ETH_HLEN;
-
-	os_WriteLog("I'm alive! 3");
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
 		if(LOGGING){os_WriteLog("ARP of new UE. Do nothing.\n");}
@@ -1921,7 +1710,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v1.3.9 --- \n");
+	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v2.0.0 --- \n");
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
@@ -2364,8 +2153,7 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 	struct sw_flow_key key;
 	int error;
 	int operation;
-	
-	os_WriteLog("I'm alive! 1");
+
 	// LOHan: Statistics Support
 	/*uint8_t switchNum = moe_GetSwitchNum(skb);
 	do_gettimeofday(&START_TIME);*/
@@ -2391,7 +2179,6 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 		kfree_skb(skb);
 		return error;
 	}
-	os_WriteLog("I'm alive! 2");
 	os_WriteLog1("mac_len: %d",skb->mac_len);
 	// LOHan: Load Balancing Support
 	/*if (switchNum == 7) {

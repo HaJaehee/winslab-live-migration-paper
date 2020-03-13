@@ -47,6 +47,10 @@ import io.netty.channel.ChannelHandler;
  * Update 2020/03/04
  *              Update history: LM-MEC(2019) v1.3.9
  *			Switch IPs are rollback.
+ *
+ * Update 2020/03/13
+ *              Update history: LM-MEC(2019) v2.0.0
+ *			Added log on/off and DHT on/off.
  */
 public final class LMDHTServer {
     public static String[] swIPAddrList = {"10.0.10.1","10.0.20.1","10.0.30.1","10.0.40.1","10.0.50.1","10.64.0.1"};
@@ -55,8 +59,9 @@ public final class LMDHTServer {
     //public static Channel clientCh;
     public static int PORT;
     public static int nodeIndex;
+    public static boolean justReset = false;
     public static DHTServer kserver = null;
-    public static boolean logging = true;
+    public static boolean logging = false;
     public static boolean logFileOut = false;
     public static String[] input = null;
     public static int ksvrPort = 8468;
@@ -67,36 +72,60 @@ public final class LMDHTServer {
     
     public static void main(String[] args) throws Exception {
 	
-    	//input = new String[] {"0"};
+    	//input = new String[] {"0"}; // For test
     	
 	    if (input == null) {
-			if (args.length == 1) {
-				if(LMDHTServer.logging)System.out.println("The First node begins");
-				kserver = new DHTServer(Integer.parseInt(args[0]));
-				if(LMDHTServer.logging)System.out.println("Bootstrap is done");
+			if ((args.length == 1) ||
+                    (args.length == 2 && args[1].equals("logging"))){
+				System.out.println("The First node begins.");
+				kserver = new DHTServer(Integer.parseInt(args[0])-1);
+				System.out.println("Bootstrap is done.");
+                if(args[1].equals("logging")) {
+                    logging = true;
+                }
 			}
-			else if (args.length == 3) {
-				if(LMDHTServer.logging)System.out.println("Connect to master node");
-				kserver = new DHTServer(Integer.parseInt(args[0]),args[1],Integer.parseInt(args[2]));
-				if(LMDHTServer.logging)System.out.println("Bootstrap is done");
+			else if ((args.length == 2 && args[1].equals("reset")) ||
+                    (args.length == 3 && args[1].equals("reset") && args[2].equals("logging"))) {
+                System.out.println("Reset switch.");
+                justReset = true;
+                if(args[2].equals("logging")) {
+                    logging = true;
+                }
+            }
+			else if ((args.length == 3) ||
+                    (args.length == 4 && args[3].equals("logging"))) {
+				System.out.println("Connect to master node.");
+				kserver = new DHTServer(Integer.parseInt(args[0])-1,args[1],Integer.parseInt(args[2]));
+				System.out.println("Bootstrap is done.");
+                if(args[3].equals("logging")) {
+                    logging = true;
+                }
 			}
 			else{
-				if(LMDHTServer.logging)System.out.println("Ambiguous Input. Usage: java LMDHTServer [nodeNum] {[bootstrap ip] [boostrap port]}");
+				if(LMDHTServer.logging){
+				    System.out.println("Ambiguous Input.");
+                    System.out.println("Usage: java LMDHTServer [switchNum]");
+                    System.out.println("Usage: java LMDHTServer [switchNum] [bootstrap ip] [bootstrap port]");
+                    System.out.println("Usage: java LMDHTServer [switchNum] reset");
+                    System.out.println("Usage: java LMDHTServer [switchNum] logging");
+                    System.out.println("Usage: java LMDHTServer [switchNum] [bootstrap ip] [bootstrap port] logging");
+                    System.out.println("Usage: java LMDHTServer [switchNum] reset logging");
+                }
 				return;
 			}
-			nodeIndex = Integer.parseInt(args[0]);
-	    } else {
+			nodeIndex = Integer.parseInt(args[0]) - 1;
+	    } else { // input != null, For test
 	    	if (input.length == 1) {
-				if(LMDHTServer.logging)System.out.println("The First node begins");
-				kserver = new DHTServer(Integer.parseInt(input[0]));
-				if(LMDHTServer.logging)System.out.println("Bootstrap is done");
+				if(LMDHTServer.logging)System.out.println("The First node begins.");
+				kserver = new DHTServer(Integer.parseInt(input[0])-1);
+				if(LMDHTServer.logging)System.out.println("Bootstrap is done.");
 			}
 			else if (input.length == 3) {
-				if(LMDHTServer.logging)System.out.println("Connect to master node");
-				kserver = new DHTServer(Integer.parseInt(input[0]),input[1],Integer.parseInt(input[2]));
-				if(LMDHTServer.logging)System.out.println("Bootstrap is done");
+				if(LMDHTServer.logging)System.out.println("Connect to master node.");
+				kserver = new DHTServer(Integer.parseInt(input[0])-1,input[1],Integer.parseInt(input[2]));
+				if(LMDHTServer.logging)System.out.println("Bootstrap is done.");
 			}
-	    	nodeIndex = Integer.parseInt(input[0]);
+	    	nodeIndex = Integer.parseInt(input[0]) - 1;
 	    }
 
         EventLoopGroup groupClient = new NioEventLoopGroup();
@@ -104,20 +133,20 @@ public final class LMDHTServer {
         bClient.group(groupClient)
         		.channel(NioDatagramChannel.class)
                 .handler(new ClientHandler());
-        
+
         Thread.sleep(1000);
-		
+
         //clientCh = bClient.bind(0).sync().channel();
-        
-        
-        PORT = 10000 + nodeIndex+1;
+
+
+        PORT = 10000 + nodeIndex;
         System.out.println("port "+PORT+" is opened.");
         Bootstrap b = new Bootstrap();
         EventLoopGroup group = new NioEventLoopGroup();
         try{
         	b.group(group)
         		.channel(NioDatagramChannel.class)
-        		.handler(new LMDHTServerHandler(nodeIndex));
+        		.handler(new LMDHTServerHandler(nodeIndex, justReset, logging));
         	b.bind(PORT).sync().channel().closeFuture().await();
         }
         catch (Exception e) {
@@ -131,7 +160,7 @@ public final class LMDHTServer {
 
 
 class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
-	
+
 	private static final byte OPCODE_BOOTUP = 0;
     private static final byte OPCODE_GET_HASH = 1;
     private static final byte OPCODE_GET_IP = 2;
@@ -139,52 +168,67 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     private static final byte OPCODE_APP_MOBILITY = 4;
     private static final byte OPCODE_CTN_MOBILITY = 5;
     private static final byte OPCODE_GET_IPPORT = 6;
-    private static final byte OPCODE_TOGGLE_LOGGING = 101;
-	
+    //private static final byte OPCODE_TOGGLE_LOGGING = 12;
+    private static final byte OPCODE_RESET_SWITCH = 13;
+
     private static final byte OPCODE_SET_SWTYPE = 0;
     private static final byte OPCODE_QUERIED_HASH = 1;
     private static final byte OPCODE_QUERIED_IP = 2;
     private static final byte OPCODE_UPDATE_IP = 3;
     private static final byte OPCODE_NEW_APP = 4;
     private static final byte OPCODE_NEW_CTN = 5;
-    
-    private static final int LM_HDR_LENGTH = 32;
-    
-    public LMDHTServerHandler(int nodeIndex) throws InterruptedException{
-        super();
-        
-        int sendBufLength = 5 + 2*LMDHTServer.swCount;
-    	byte[] sendBuf = new byte[sendBufLength];
-        sendBuf[0] = OPCODE_SET_SWTYPE;
-        sendBuf[1] = (byte)LMDHTServer.edgeSWList[nodeIndex];//switch num
-        sendBuf[2] = (byte)0x02;//switch type
 
-        byte[] lengthBytes = ByteBuffer.allocate(2).putShort((short)LMDHTServer.swCount).array();
+    private static final int LM_HDR_LENGTH = 32;
+
+    public LMDHTServerHandler(int nodeIndex, boolean justReset, boolean logging) throws InterruptedException{
+        super();
+
+        int sendBufLength = 6 + 2*LMDHTServer.swCount ;
+    	byte[] sendBuf = new byte[sendBufLength];
+    	if (justReset) {
+            sendBuf[0] = OPCODE_RESET_SWITCH;
+        } else {
+            sendBuf[0] = OPCODE_SET_SWTYPE;
+        }
+        sendBuf[1] = (byte) LMDHTServer.edgeSWList[nodeIndex];//switch num
+        sendBuf[2] = (byte) 0x02;//switch type
+
+        byte[] lengthBytes = ByteBuffer.allocate(2).putShort((short) LMDHTServer.swCount).array();
         sendBuf[3] = lengthBytes[0];
         sendBuf[4] = lengthBytes[1];
-        
-        //appends edge switch numbers to byte array 
-        for (int i = 0; i < LMDHTServer.swCount; i++){
-            if (LMDHTServer.edgeSWList[i] != 0){
-                byte[] swBytes = ByteBuffer.allocate(2).putShort((short)(LMDHTServer.edgeSWList[i]-1)).array();
-                sendBuf[5 + i*2] = swBytes[0];
-                sendBuf[5 + i*2+1] = swBytes[1];
+        if (logging) {
+            sendBuf[5] = (byte)1;
+        } else {
+            sendBuf[5] = (byte)0;
+        }
+        //appends edge switch numbers to byte array
+        for (int i = 0; i < LMDHTServer.swCount; i++) {
+            if (LMDHTServer.edgeSWList[i] != 0) {
+                byte[] swBytes = ByteBuffer.allocate(2).putShort((short) (LMDHTServer.edgeSWList[i] - 1)).array();
+                sendBuf[6 + i * 2] = swBytes[0];
+                sendBuf[6 + i * 2 + 1] = swBytes[1];
             }
         }
-        if(LMDHTServer.logging) {
-        	System.out.printf("wake up signal to ovs:");
-        
-			for (int i = 0;i < sendBufLength;i++){
-				System.out.printf("%02x",sendBuf[i]);
-			}
-			System.out.println();
+
+
+
+        if (LMDHTServer.logging) {
+            System.out.printf("wake up signal to ovs:");
+
+            for (int i = 0; i < sendBufLength; i++) {
+                System.out.printf("%02x", sendBuf[i]);
+            }
+            System.out.println();
         }
-        
+
         Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
         //wake up signal to ovs
         clientCh.writeAndFlush(
-            new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
+                new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("localhost", LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
+        if (justReset) {
+            System.exit(0);
+        }
     }
 
     int fromByteArray(byte[] bytes) {
@@ -219,12 +263,12 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         network = b2 << 8 | b1 >> 8;
         return network;
     }
-    
+
     @Override
     public void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) throws UnknownHostException, InterruptedException, Exception {
     	//if(LMDHTServer.logging)System.err.println(packet.content().toString(CharsetUtil.UTF_8));
         ByteBuf payload = packet.content();
-        
+
         //if(LMDHTServer.logging)System.out.println("[Node "+LMDHTServer.nodeNum+"] Received Message: "+payload.toString());
 
         byte opCode = payload.readByte();
@@ -239,8 +283,8 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         if(LMDHTServer.logging)System.out.printf("[Node %d] Received Message: opCode=%d,  switchNum=%d, IP=%s, SWIP = %s\n",LMDHTServer.nodeIndex, opCode, switchNum, strIP, "127.0.0.1");
         
         if (opCode == OPCODE_BOOTUP){
-        	if(LMDHTServer.logging)System.out.println("opCode 0: show edge switchs list");
-            if(LMDHTServer.logging)System.out.println("opCode 0 will be supported soon");
+        	if(LMDHTServer.logging)System.out.println("opCode 0: show edge switchs list.");
+            if(LMDHTServer.logging)System.out.println("opCode 0 will be supported soon.");
             
         } /*else if (opCode == OPCODE_GET_HASH){  //deprecated by jaehee 170414
         	if(LMDHTServer.logging)System.out.println("opCode 1: get Object ID from DHT server with digested IP");
@@ -258,7 +302,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 //			String strInput = opCode+swNum+hostIP;
 
         }*/ else if (opCode == OPCODE_GET_IP){
-        	if(LMDHTServer.logging)System.out.println("opCode 2: get Host IP from DHT server with Object ID");
+        	if(LMDHTServer.logging)System.out.println("opCode 2: get Host IP from DHT server with Object ID.");
         	//copy payload(Object ID) to strDig byte array and query to DHT table
 			byte[] strDig = new byte[LM_HDR_LENGTH]; //Jaehee modified 160720
 			
@@ -297,7 +341,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 //			String strInput = opCode+swNum+esIP+hash;
 			
         } else if (opCode == OPCODE_INFORM_CONNECTION){
-        	if(LMDHTServer.logging)System.out.println("opCode 3: store DHT server");
+        	if(LMDHTServer.logging)System.out.println("opCode 3: store DHT server.");
             
             //byte[] byte_switch_ip = new byte[4];
             String strSWIP = LMDHTServer.swIPAddrList[switchIndex];
@@ -349,7 +393,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
-			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
+			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+".\n");
 
 	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
 			
@@ -364,7 +408,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 //			String strInput = opCode+swNum+hostIP+swIP;
 
         } else if (opCode == OPCODE_APP_MOBILITY){
-        	if(LMDHTServer.logging)System.out.println("opCode 4: application mobility");
+        	if(LMDHTServer.logging)System.out.println("opCode 4: application mobility.");
         
             byte[] byteHomeTargetHostIP = byteHostIP;
             String strHomeTargetHostIP = strIP;
@@ -425,7 +469,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				    byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
-					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+"\n");
+					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+".\n");
                    
 
 			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
@@ -436,7 +480,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
-			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
+			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+".\n");
 			
 
 	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
@@ -481,7 +525,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         //}
         
         } else if (opCode == OPCODE_CTN_MOBILITY){
-        	if(LMDHTServer.logging)System.out.println("opCode 5: container mobility");
+        	if(LMDHTServer.logging)System.out.println("opCode 5: container mobility.");
             
             byte[] byteHomeCTIP = byteHostIP;
             String strHomeCTIP = strIP;
@@ -541,7 +585,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                     byte[] swByte = ByteBuffer.allocate(2).putShort(LMDHTServer.edgeSWList[i]).array();
 				    sendBuf[1] = swByte[1];
 				    int swListIndex = LMDHTServer.edgeSWList[i]-1;
-					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+"\n");
+					if(LMDHTServer.logging)System.out.printf("receiving SW IP="+LMDHTServer.swIPAddrList[swListIndex]+",port="+LMDHTServer.ovsPort+".\n");
 
 			        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
 					clientCh.writeAndFlush(
@@ -550,7 +594,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
-			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
+			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+".\n");
 			
 
 	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
@@ -614,7 +658,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 //			String portNumber = "0050";
 //			String strInput = opCode+swNum+homeTargetHostIP+portNumber; 
         
-        } else if (opCode == OPCODE_TOGGLE_LOGGING){
+        } /*else if (opCode == OPCODE_TOGGLE_LOGGING){
         	if(LMDHTServer.logging)System.out.println("opCode 101: Toggle ovs logging");
         	
         	byte[] sendBuf = new byte[2];
@@ -636,7 +680,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 			}
 			byte[] swByte = ByteBuffer.allocate(2).putShort(switchNum).array();
 			sendBuf[1] = swByte[1];
-			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+"\n");
+			if(LMDHTServer.logging)System.out.printf("receiving SW IP="+"127.0.0.1"+",port="+LMDHTServer.ovsPort+".\n");
 
 	        Channel clientCh = LMDHTServer.bClient.bind(0).sync().channel();
 			
@@ -646,7 +690,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 //			String opCode = "OPCODE_TOGGLE_LOGGING";
 //			String swNum = "01"; 
         
-        }
+        }*/
     }
 
     @Override
@@ -660,7 +704,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 class ClientHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) {
-        if(LMDHTServer.logging)System.out.println("Must not be executed");
+        if(LMDHTServer.logging)System.out.println("Must not be executed.");
     }
 }
 
@@ -817,7 +861,7 @@ class DHTServer {
 					        }
 						}
 					} else {
-						if(LMDHTServer.logging)System.out.println("Get Failed");
+						if(LMDHTServer.logging)System.out.println("Get Failed.");
 						
 						byte[] firstSHA = sha256(input).getBytes();
 						LMDHTServer.kserver.get(OPCODE_GET_IPPORT, input, switchNum, lbyteHostIP, firstSHA);
@@ -938,7 +982,7 @@ class DHTServer {
 					        }
 						}
 					} else {
-						if(LMDHTServer.logging)System.out.println("Get Failed");
+						if(LMDHTServer.logging)System.out.println("Get Failed.");
 						
 						byte[] sendData = new byte[43];//Jaehee modified 160720
 						
@@ -1130,7 +1174,7 @@ class DHTServer {
 					
 					
 					else {
-						if(LMDHTServer.logging)System.out.println("Get Failed");
+						if(LMDHTServer.logging)System.out.println("Get Failed.");
 						
 						int nPort = Integer.parseInt(input.split(":")[1]);
 						String strPort = Integer.toHexString(nPort);
@@ -1430,7 +1474,7 @@ class DHTServer {
 				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 
-						if(LMDHTServer.logging)System.out.println("Get Failed");
+						if(LMDHTServer.logging)System.out.println("Get Failed.");
 						
 					}
 
@@ -1479,13 +1523,13 @@ class DHTServer {
 				                        new DatagramPacket(Unpooled.copiedBuffer(send_data), new InetSocketAddress("localhost",LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
 
-						if(LMDHTServer.logging)System.out.println("Get Failed");
+						if(LMDHTServer.logging)System.out.println("Get Failed.");
 					}
 
 				}
 			});
 		} else {
-			if(LMDHTServer.logging)System.out.println("Logical Error");
+			if(LMDHTServer.logging)System.out.println("Logical Error.");
 		}
 	}*/
 	
