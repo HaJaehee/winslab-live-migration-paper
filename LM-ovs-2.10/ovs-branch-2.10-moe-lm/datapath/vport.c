@@ -280,7 +280,8 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 
 
 		if (opCode == OPCODE_SET_SWTYPE) {
-			if(LOGGING){os_WriteLog("OPCODE: OPCODE_SET_SWTYPE\n");}
+			os_WriteLog("OPCODE: OPCODE_SET_SWTYPE\n");
+            os_WriteLog1("LOGGING: %1\n",LOGGING);
 			i = 0;
 			total = 0;
 			idx = 0;
@@ -300,7 +301,8 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			if(LOGGING){os_WriteLog3("SwitchNum=%u, Execution Time=%u.%06d\n", i, STAT_TIMES[i].tv_sec, STAT_TIMES[i].tv_usec);} }} }
 			*/
 		} else if (opCode == OPCODE_RESET_SWITCH) {
-            if(LOGGING){os_WriteLog("OPCODE: OPCODE_RESET_SWITCH\n");}
+            os_WriteLog("OPCODE: OPCODE_RESET_SWITCH\n");
+            os_WriteLog1("LOGGING: %1\n",LOGGING);
 		    for (i = 0; i < SWITCH_NUMS; i++) {
                 SW_TYPES[i] = SWITCHTYPE_IMS;
 		    }
@@ -1710,7 +1712,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog("--- OvS with LM-MEC has successfully been loaded. v2.0.0 --- \n");
+	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.0, LOGGING: %d --- \n",LOGGING);
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);

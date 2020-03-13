@@ -80,7 +80,7 @@ public final class LMDHTServer {
 				System.out.println("The First node begins.");
 				kserver = new DHTServer(Integer.parseInt(args[0])-1);
 				System.out.println("Bootstrap is done.");
-                if(args[1].equals("logging")) {
+                if(args.length == 2 && args[1].equals("logging")) {
                     logging = true;
                 }
 			}
@@ -88,7 +88,7 @@ public final class LMDHTServer {
                     (args.length == 3 && args[1].equals("reset") && args[2].equals("logging"))) {
                 System.out.println("Reset switch.");
                 justReset = true;
-                if(args[2].equals("logging")) {
+                if(args.length == 3 && args[2].equals("logging")) {
                     logging = true;
                 }
             }
@@ -97,7 +97,7 @@ public final class LMDHTServer {
 				System.out.println("Connect to master node.");
 				kserver = new DHTServer(Integer.parseInt(args[0])-1,args[1],Integer.parseInt(args[2]));
 				System.out.println("Bootstrap is done.");
-                if(args[3].equals("logging")) {
+                if(args.length == 4 && args[3].equals("logging")) {
                     logging = true;
                 }
 			}
@@ -140,7 +140,7 @@ public final class LMDHTServer {
 
 
         PORT = 10000 + nodeIndex;
-        System.out.println("port "+PORT+" is opened.");
+
         Bootstrap b = new Bootstrap();
         EventLoopGroup group = new NioEventLoopGroup();
         try{
@@ -229,6 +229,8 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         if (justReset) {
             System.exit(0);
         }
+
+        System.out.println("Port "+LMDHTServer.PORT+" is opened.");
     }
 
     int fromByteArray(byte[] bytes) {
