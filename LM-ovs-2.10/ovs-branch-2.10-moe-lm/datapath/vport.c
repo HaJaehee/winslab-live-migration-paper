@@ -2179,7 +2179,7 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 		kfree_skb(skb);
 		return error;
 	}
-	os_WriteLog1("mac_len: %d",skb->mac_len);
+	//os_WriteLog1("mac_len: %d",skb->mac_len);
 	// LOHan: Load Balancing Support
 	/*if (switchNum == 7) {
 		uint8_t randnum = os_myRand() % 16;
