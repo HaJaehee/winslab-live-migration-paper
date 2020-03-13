@@ -139,7 +139,7 @@ public final class LMDHTServer {
         //clientCh = bClient.bind(0).sync().channel();
 
 
-        PORT = 10000 + nodeIndex;
+        PORT = 10001 + nodeIndex;
 
         Bootstrap b = new Bootstrap();
         EventLoopGroup group = new NioEventLoopGroup();
@@ -227,6 +227,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                 new DatagramPacket(Unpooled.copiedBuffer(sendBuf), new InetSocketAddress("localhost", LMDHTServer.ovsPort))).addListener(ChannelFutureListener.CLOSE);
 
         if (justReset) {
+            Thread.sleep(2000);
             System.exit(0);
         }
 

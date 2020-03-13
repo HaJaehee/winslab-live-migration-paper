@@ -274,14 +274,15 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 		skb = skb_dequeue(&wrapper->sk->sk_receive_queue);
 		opCode = *(uint8_t*)(skb->data);
 		switchNum = *(uint8_t*)(skb->data+ 1);
-		LOGGING = *(uint8_t*)(skb->data+ 5);
+
 		if(LOGGING){os_WriteLog10("Received data=%u%u%u%u%u%u%u%u%u%u.\n",*((uint8_t*)skb->data + 0),*((uint8_t*)skb->data + 1),*((uint8_t*)skb->data + 2),*((uint8_t*)skb->data + 3),*((uint8_t*)skb->data + 4),*((uint8_t*)skb->data + 5),*((uint8_t*)skb->data + 6),*((uint8_t*)skb->data + 7),*((uint8_t*)skb->data + 8),*((uint8_t*)skb->data + 9));}
 		if(LOGGING){os_WriteLog2("Received a UDP message, opCode=%u, SwitchNum=%u\n", opCode, switchNum);}
 
 
 		if (opCode == OPCODE_SET_SWTYPE) {
 			os_WriteLog("OPCODE: OPCODE_SET_SWTYPE\n");
-            os_WriteLog1("LOGGING: %1\n",LOGGING);
+            LOGGING = *(uint8_t*)(skb->data+ 5);
+            os_WriteLog1("LOGGING: %d\n",LOGGING);
 			i = 0;
 			total = 0;
 			idx = 0;
@@ -302,7 +303,8 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			*/
 		} else if (opCode == OPCODE_RESET_SWITCH) {
             os_WriteLog("OPCODE: OPCODE_RESET_SWITCH\n");
-            os_WriteLog1("LOGGING: %1\n",LOGGING);
+            LOGGING = *(uint8_t*)(skb->data+ 5);
+            os_WriteLog1("LOGGING: %d\n",LOGGING);
 		    for (i = 0; i < SWITCH_NUMS; i++) {
                 SW_TYPES[i] = SWITCHTYPE_IMS;
 		    }
@@ -1373,7 +1375,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 		
 		 if (1==dstIPisSWIP) {
-			 os_WriteLog("Destination IP is switch IP.");
+			 if(LOGGING){os_WriteLog("Destination IP is switch IP.");}
 		 }
 		
 		if (senderType==SENDERTYPE_UE && 0==dstIPisSWIP) {
