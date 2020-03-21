@@ -83,6 +83,10 @@
  * Update 2020/03/13
  *              Update history: LM-MEC(2019) v2.0.0
  *			Added log on/off and reset.
+ *
+ * Update 2020/03/21
+ *              Update history: LM-MEC(2019) v2.0.1
+ *			skb_put() incur kernel panic.
  */
 
 
@@ -895,6 +899,7 @@ static void moe_CheckNewUE(const uint8_t switchNum, const uint16_t protocol, uin
 //Jaehee modified 2018/02/20
 //Jaehee modified 2019/06/21
 //Jaehee modified 2020/03/05
+//Jaehee modified 2020/03/21 v2.0.1
 static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* hashed, uint32_t esIP, int proto, int doInsertObjID)
 {
 	uint8_t* data = NULL;
@@ -916,13 +921,16 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
 		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 		len = skb->len;
-		if(LOGGING){os_WriteLog("--0--skb_put().\n");}
-		skb_put(skb, MOE_HLEN);
+		//if(LOGGING){os_WriteLog("--0--skb_put().\n");}
+		//skb_put(skb, MOE_HLEN);
+        if(LOGGING){os_WriteLog("--0--skb_push().\n");}
+        skb_push(skb, MOE_HLEN);
 		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
 		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 
 		/* Move the data to the beginning of the new data position. */
-		memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, len - ETH_HLEN - IP_HLEN);
+		//memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, len - ETH_HLEN - IP_HLEN);
+        memmove(skb->data, skb->data + MOE_HLEN, ETH_HLEN + IP_HLEN);
 		
 		data = skb->data + ETH_HLEN;
 		len = 0;
@@ -1714,7 +1722,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.0, LOGGING: %d --- \n",LOGGING);
+	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.1, LOGGING= %d --- \n",LOGGING);
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
