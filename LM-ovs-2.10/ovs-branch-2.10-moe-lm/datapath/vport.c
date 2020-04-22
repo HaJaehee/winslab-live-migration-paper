@@ -69,24 +69,28 @@
  *			Why it search cache if dst IP is SWIP?.
  *
  * Update 2020/02/23
- *              Update history: LM-MEC(2019) v1.3.7
+ *              Update history: LM-MEC(2020) v1.3.7
  *			Mars' ip is changed from 10.64.0.1 to 10.0.40.2.
  *
  * Update 2020/03/03
- *              Update history: LM-MEC(2019) v1.3.8
+ *              Update history: LM-MEC(2020) v1.3.8
  *			IEEE 802.11 frame inter-operability.
  *
  * Update 2020/03/04
- *              Update history: LM-MEC(2019) v1.3.9
+ *              Update history: LM-MEC(2020) v1.3.9
  *			Switch IPs are rollback.
  *
  * Update 2020/03/13
- *              Update history: LM-MEC(2019) v2.0.0
+ *              Update history: LM-MEC(2020) v2.0.0
  *			Added log on/off and reset.
  *
  * Update 2020/03/21
- *              Update history: LM-MEC(2019) v2.0.1
+ *              Update history: LM-MEC(2020) v2.0.1
  *			skb_put() incur kernel panic.
+ *
+ * Update 2020/04/22
+ *              Update history: LM-MEC(2020) v2.0.2
+ *			ovs_dp_process_packet2 is applied to moe_ForwardSKB().
  */
 
 
@@ -816,6 +820,7 @@ static void moe_SaveSKB(uint32_t switchNum, uint32_t destIP, struct vport *vp, s
 	list_add_tail(&entry->list, &SKB_LIST);
 }
 
+//Jaehee modified 2020/04/22
 static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP)
 {
 	_LE* entry = NULL;
@@ -827,9 +832,9 @@ static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP)
 		}
 		if (entry->switchNum == switchNum && entry->destIP == destIP) {
 			if (moe_CheckHeader(entry->vp, entry->skb, NULL) == -1) {continue;}
-			if(LOGGING){os_WriteLog("Processing packet.");}
+			if(LOGGING){os_WriteLog("Processing packet after handling.");}
 			rcu_read_lock();
-            ovs_dp_process_packet(entry->skb, NULL);
+            ovs_dp_process_packet2(entry->skb, NULL, DO_FORWARD_AFTER_HANDLING);
 			rcu_read_unlock();
 			previous = entry;
 		}
@@ -1355,9 +1360,10 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
-		if(LOGGING){os_WriteLog("ARP of new UE. Do nothing.\n");}
+		if(LOGGING){os_WriteLog("ARP of new UE. Check new UE.\n");}
 		moe_CheckNewUE(switchNum, protocol, data);
-		if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+		if(LOGGING){os_WriteLog("Forwarding.");}
+		return DO_FORWARD;
 	}
 	
 
@@ -1722,7 +1728,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.1, LOGGING= %d --- \n",LOGGING);
+	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.2, LOGGING= %d --- \n",LOGGING);
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
