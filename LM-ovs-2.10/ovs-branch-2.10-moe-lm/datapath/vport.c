@@ -90,7 +90,7 @@
  *
  * Update 2020/04/22
  *              Update history: LM-MEC(2020) v2.0.2
- *			ovs_dp_process_packet2 is applied to moe_ForwardSKB().
+ *			ovs_dp_process_packet2() is applied to moe_ForwardSKB().
  */
 
 
