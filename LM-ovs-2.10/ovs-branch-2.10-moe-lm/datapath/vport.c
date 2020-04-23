@@ -838,7 +838,7 @@ static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP)
 			if (moe_CheckHeader(entry->vp, entry->skb, NULL) == DO_NOT_FORWARD) {continue;}
 			if (LOGGING){os_WriteLog("Processing packet after handling.");}
 			rcu_read_lock();
-            ovs_dp_process_packet2(entry->skb, NULL, DO_FORWARD_AFTER_HANDLING); 
+            ovs_dp_process_packet2(entry->skb, NULL, DO_FORWARD_AFTER_HANDLING);
 			rcu_read_unlock();
 			previous = entry;
 		}
@@ -1468,11 +1468,11 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 						ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 
 						// Buffer a packet
-						/*moe_SaveSKB(switchNum, dstIP, vp, skb);
-						if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+						moe_SaveSKB(switchNum, dstIP, vp, skb);
+						if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 
 						// Do not buffer a packet
-                        return DO_FORWARD;
+                        //return DO_FORWARD;
 					}
 				}
 				if (LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
@@ -1483,7 +1483,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					if (LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-					if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+					if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING; // newIP (ESIP) equals to this switch IP.
 				}
 					
 				if (newIP == 0) {
@@ -1512,11 +1512,11 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 					// Send a request message to the upper layer
 					ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
 					// Buffer a packet
-					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+					moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 
                     // Do not buffer a packet
-                    return DO_FORWARD;
+                    //return DO_FORWARD;
 				}
 				if (LOGGING){os_WriteLog9("Switch num=%u, Received IP=%u.%u.%u.%u, Host IP=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
@@ -1545,7 +1545,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_TCP && totalLen == 246 && srcPort == 4001 && dstPort == 14999) {
 			if (LOGGING){os_WriteLog("New UE.\n");}
 			moe_CheckNewUE(switchNum, protocol, data);
-			if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+			if (LOGGING){os_WriteLog("Not forwarding, but buffering.");}  return DO_NOT_FORWARD;
 		}
 		
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
@@ -1595,21 +1595,21 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if (dstPort > 61000 || dstPort < 32768) {
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 					// Buffer a packet
-					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+					moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if (LOGGING){os_WriteLog("Not forwarding, but buffering.");}  return DO_NOT_FORWARD;
 
                     // Do not buffer a packet
-                    return DO_FORWARD;
+                    //return DO_FORWARD;
 				} else {
 					dstPortByteArr[0] = 0;
 					dstPortByteArr[1] = 0;
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
 					// Buffer a packet
-					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+					moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if(LOGGING){os_WriteLog("Not forwarding, but buffering.");}  return DO_NOT_FORWARD;
 
 					// Do not buffer a packet
-                    return DO_FORWARD;
+                    //return DO_FORWARD;
 				}
 				// 170327 Jaehee
 			}
@@ -1625,7 +1625,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if (LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING; // newIP (ESIP) equals to this switch IP.
 			}
 			
 			if (newIP == 0) {
@@ -1646,11 +1646,11 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
 
 				// Buffer a packet
-				/*moe_SaveSKB(switchNum, dstIP, vp, skb);
-				if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+				moe_SaveSKB(switchNum, dstIP, vp, skb);
+				if (LOGGING){os_WriteLog("Not forwarding, but buffering.");}  return DO_NOT_FORWARD;
 
                 // Do not buffer a packet
-                return DO_FORWARD;
+                //return DO_FORWARD;
 			}
 			if (LOGGING){os_WriteLog10("Switch num=%u, Received IP=%u.%u.%u.%u, dstPort=%u, Host IP=%u.%u.%u.%u\n", switchNum,
 									  *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3), dstPort,
@@ -1658,7 +1658,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				os_WriteLog4("Old IP=%u.%u.%u.%u\n", *((uint8_t*)&oldIP + 0), *((uint8_t*)&oldIP + 1), *((uint8_t*)&oldIP + 2), *((uint8_t*)&oldIP + 3));}
 			if (newIP == 0) {
 				
-				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 			}
 
 			/*
