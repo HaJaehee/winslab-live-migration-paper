@@ -86,11 +86,15 @@
  *
  * Update 2020/03/21
  *              Update history: LM-MEC(2020) v2.0.1
- *			skb_put() incur kernel panic.
+ *			skb_put() incur kernel panic. Do not use that.
  *
  * Update 2020/04/22
  *              Update history: LM-MEC(2020) v2.0.2
  *			ovs_dp_process_packet2() is applied to moe_ForwardSKB().
+ *
+ * Update 2020/04/23
+ *              Update history: LM-MEC(2020) v2.0.3
+ *          Disabled moe_SaveSKB().
  */
 
 
@@ -276,15 +280,15 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 	struct sockaddr_in server;
 	
 	while ((len = skb_queue_len(&wrapper->sk->sk_receive_queue)) > 0) {
-		if(LOGGING){os_WriteLog1("Worker queue's socket list length=%d.\n",len);}
-		if(LOGGING){os_WriteLog1("Processing IPC message count=%d.\n",udpRcvCount);}
+		if (LOGGING){os_WriteLog1("Worker queue's socket list length=%d.\n",len);}
+		if (LOGGING){os_WriteLog1("Processing IPC message count=%d.\n",udpRcvCount);}
 		udpRcvCount++;
 		skb = skb_dequeue(&wrapper->sk->sk_receive_queue);
 		opCode = *(uint8_t*)(skb->data);
 		switchNum = *(uint8_t*)(skb->data+ 1);
 
-		if(LOGGING){os_WriteLog10("Received data=%u%u%u%u%u%u%u%u%u%u.\n",*((uint8_t*)skb->data + 0),*((uint8_t*)skb->data + 1),*((uint8_t*)skb->data + 2),*((uint8_t*)skb->data + 3),*((uint8_t*)skb->data + 4),*((uint8_t*)skb->data + 5),*((uint8_t*)skb->data + 6),*((uint8_t*)skb->data + 7),*((uint8_t*)skb->data + 8),*((uint8_t*)skb->data + 9));}
-		if(LOGGING){os_WriteLog2("Received a UDP message, opCode=%u, SwitchNum=%u\n", opCode, switchNum);}
+		if (LOGGING){os_WriteLog10("Received data=%u%u%u%u%u%u%u%u%u%u.\n",*((uint8_t*)skb->data + 0),*((uint8_t*)skb->data + 1),*((uint8_t*)skb->data + 2),*((uint8_t*)skb->data + 3),*((uint8_t*)skb->data + 4),*((uint8_t*)skb->data + 5),*((uint8_t*)skb->data + 6),*((uint8_t*)skb->data + 7),*((uint8_t*)skb->data + 8),*((uint8_t*)skb->data + 9));}
+		if (LOGGING){os_WriteLog2("Received a UDP message, opCode=%u, SwitchNum=%u\n", opCode, switchNum);}
 
 
 		if (opCode == OPCODE_SET_SWTYPE) {
@@ -307,7 +311,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			/*
 			{ int i; for (i = 0; i < SWITCH_NUMS; i++){
 				if (STAT_TIMES[i].tv_sec != 0 && STAT_TIMES[i].tv_usec != 0){
-			if(LOGGING){os_WriteLog3("SwitchNum=%u, Execution Time=%u.%06d\n", i, STAT_TIMES[i].tv_sec, STAT_TIMES[i].tv_usec);} }} }
+			if (LOGGING){os_WriteLog3("SwitchNum=%u, Execution Time=%u.%06d\n", i, STAT_TIMES[i].tv_sec, STAT_TIMES[i].tv_usec);} }} }
 			*/
 		} else if (opCode == OPCODE_RESET_SWITCH) {
             os_WriteLog("OPCODE: OPCODE_RESET_SWITCH\n");
@@ -319,7 +323,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
             moe_CleanUp();
         }
 		else if (opCode == OPCODE_QUERIED_HASH) {
-			if(LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_HASH\n");}
+			if (LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_HASH\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
@@ -327,14 +331,14 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			switchIP = *(uint32_t*)(skb->data + 6 + HASH_LEN);
 
 			if (!moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp)) {		// If not exist,
-				if(LOGGING){os_WriteLog8("Host IP=%u.%u.%u.%u, Connected Switch IP=%u.%u.%u.%u\n",
+				if (LOGGING){os_WriteLog8("Host IP=%u.%u.%u.%u, Connected Switch IP=%u.%u.%u.%u\n",
 										 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3),
 										 *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3));}
 				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, 0);
 				moe_ForwardSKB(switchNum, destIP);
 			}
 		} else if (opCode == OPCODE_QUERIED_IP) {
-			if(LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_IP\n");}
+			if (LOGGING){os_WriteLog("OPCODE: OPCODE_QUERIED_IP\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
@@ -346,20 +350,20 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 				moe_ForwardSKB(switchNum, switchIP); // Should be the switch's IP
 			}
 		} else if (opCode == OPCODE_UPDATE_IP) {
-			if(LOGGING){os_WriteLog("OPCODE: OPCODE_UPDATE_IP\n");}
+			if (LOGGING){os_WriteLog("OPCODE: OPCODE_UPDATE_IP\n");}
 			tempHash = NULL;
 			temp = 0;
 			destIP = *(uint32_t*)(skb->data + 2);
 			switchIP = *(uint32_t*)(skb->data + 6);
 			memcpy(objHash, skb->data + 10, HASH_LEN);
 			if (moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp) && switchIP != temp) {
-				if(LOGGING){os_WriteLog8("End-host Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
+				if (LOGGING){os_WriteLog8("End-host Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
 										 *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 										 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3));}
 				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, 0);
 			} else if (switchIP != temp) {
 
-				if(LOGGING){os_WriteLog8("End-host Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
+				if (LOGGING){os_WriteLog8("End-host Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
 										 *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 										 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3));}
 				moe_InsertObject(switchNum, destIP, 0, objHash, switchIP, 0);
@@ -370,7 +374,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			}
 			/////////////////////////////////////////////////////////////////
 		} else if (opCode == OPCODE_NEW_APP) { // Jaehee: TODO
-			if(LOGGING){os_WriteLog("OPCODE: OPCODE_NEW_APP\n");}
+			if (LOGGING){os_WriteLog("OPCODE: OPCODE_NEW_APP\n");}
 			tempHash = NULL;
 			newMOIP = 0;
 			temp = 0;
@@ -380,7 +384,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			newMOIP = *(uint32_t*)(skb->data + 10);
 			destPort = ntohs(*(uint16_t*)(skb->data + 14));
 			//if (moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp) && switchIP != temp) {
-			if(LOGGING){os_WriteLog9("Application Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u with dstPort=%u\n",
+			if (LOGGING){os_WriteLog9("Application Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u with dstPort=%u\n",
 									 *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 									 *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);}
 			memcpy(objHash, skb->data + 16, HASH_LEN);
@@ -394,7 +398,7 @@ static void ipc_ReceiveMessages(struct work_struct* data)
 			switchIP = *(uint32_t*)(skb->data + 6);
 			newMOIP = *(uint32_t*)(skb->data + 10);
 			if (moe_GetObjectFromIP(switchNum, destIP, 0, &tempHash, &temp) && switchIP != temp) {
-				if(LOGGING){os_WriteLog9("Container Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
+				if (LOGGING){os_WriteLog9("Container Mobility Support! Switch IP=%u.%u.%u.%u when Host IP=%u.%u.%u.%u\n",
 					*((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3),
 				*((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3));}
 				memcpy(objHash, skb->data + 14, HASH_LEN);
@@ -443,7 +447,7 @@ static void ipc_SendMessage(
 	mm_segment_t oldfs;
 	int len = sizeof(opCode) + sizeof(switchNum);
 
-	if(LOGGING){os_WriteLog2("Sending a message to the upper layer. SwitchNum=%u, opCode=%u\n", switchNum, opCode);}
+	if (LOGGING){os_WriteLog2("Sending a message to the upper layer. SwitchNum=%u, opCode=%u\n", switchNum, opCode);}
 	sendBuffer[0] = opCode;
 	sendBuffer[1] = switchNum;
 	memcpy(sendBuffer + len, (void*)&clientIP, sizeof(clientIP));
@@ -462,8 +466,8 @@ static void ipc_SendMessage(
 	to.sin_family = AF_INET;
 	to.sin_addr.s_addr = htonl(INADDR_SEND);
 	to.sin_port = htons(10000 + switchNum);
-	if(LOGGING){os_WriteLog3("Info of the upper layer. AF_INET =%u, s_addr=%u, sin_port=%u.\n", to.sin_family, INADDR_SEND , 10000+switchNum);}
-	if(LOGGING){os_WriteLog3("SendBuffer[0]=%u. SendBuffer[1]=%u, length=%u.\n",sendBuffer[0],sendBuffer[1],len);}	
+	if (LOGGING){os_WriteLog3("Info of the upper layer. AF_INET =%u, s_addr=%u, sin_port=%u.\n", to.sin_family, INADDR_SEND , 10000+switchNum);}
+	if (LOGGING){os_WriteLog3("SendBuffer[0]=%u. SendBuffer[1]=%u, length=%u.\n",sendBuffer[0],sendBuffer[1],len);}	
 	memset(&msg, 0, sizeof(msg));
         memset(&iov, 0, sizeof(iov));
         memset(&msg_iov_iter, 0, sizeof(msg_iov_iter));
@@ -486,7 +490,7 @@ static void ipc_SendMessage(
 	result = sock_sendmsg(sendsocket, &msg);
 	set_fs(oldfs);
 
-	if(LOGGING){os_WriteLog1("Result of sock_sendmsg=%u.\n", result);}
+	if (LOGGING){os_WriteLog1("Result of sock_sendmsg=%u.\n", result);}
 }
 
 static void os_CreateIPCSocket(void)
@@ -587,7 +591,7 @@ static void moe_InsertObject(uint32_t switchNum, uint32_t destIP, uint16_t destP
 {
 	int i = 0;
 	_OE* entry = NULL;
-	if(LOGGING){
+	if (LOGGING){
 		os_WriteLog10("Updating cache: SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u, SwitchIP=%u.%u.%u.%u,\n",switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort, *((uint8_t*)&switchIP + 0), *((uint8_t*)&switchIP + 1), *((uint8_t*)&switchIP + 2), *((uint8_t*)&switchIP + 3));
 		os_WriteLog4("moIP=%u.%u.%u.%u\n", *((uint8_t*)&moIP + 0), *((uint8_t*)&moIP + 1), *((uint8_t*)&moIP + 2), *((uint8_t*)&moIP + 3));
 	}
@@ -599,7 +603,7 @@ static void moe_InsertObject(uint32_t switchNum, uint32_t destIP, uint16_t destP
 	entry->switchIP = switchIP;
 	entry->moIP = moIP;
 	memcpy(entry->objHash, objHash, HASH_LEN);
-	if(LOGGING){
+	if (LOGGING){
 		os_WriteLog("ObjID=\n");
 		for (i=0 ; i<(HASH_LEN/8) ; i++) {
 			os_WriteLog8("%02x%02x%02x%02x%02x%02x%02x%02x\n", *((uint8_t*)objHash+((i*8))),*((uint8_t*)objHash+((i*8)+1)),*((uint8_t*)objHash+((i*8)+2)),*((uint8_t*)objHash+((i*8)+3)),*((uint8_t*)objHash+((i*8)+4)),*((uint8_t*)objHash+((i*8)+5)),*((uint8_t*)objHash+((i*8)+6)),*((uint8_t*)objHash+((i*8)+7)));
@@ -628,14 +632,14 @@ static uint32_t moe_GetObjectFromIP(uint32_t switchNum, uint32_t destIP, uint16_
 		if(LOGGING_SEARCH_LATENCY) {
 			do_gettimeofday(&startTime);
 		}
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog6("Searching cache. SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);}
 		hash_for_each_possible(OBJ_TBL, current_entry, hlist_ip, destIP) {
 			if (current_entry->switchNum == switchNum &&
 				current_entry->destIP == destIP && current_entry->destPort == destPort) {
 				*objHash = current_entry->objHash;
 				*pSwitchIP = current_entry->switchIP;
-				if(LOGGING){
+				if (LOGGING){
 					os_WriteLog6("Cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), destPort);
 					os_WriteLog4("ESIP=%u.%u.%u.%u", *((uint8_t*)pSwitchIP + 0), *((uint8_t*)pSwitchIP + 1), *((uint8_t*)pSwitchIP + 2), *((uint8_t*)pSwitchIP + 3));
 					os_WriteLog("ObjID=\n");
@@ -661,14 +665,14 @@ static uint32_t moe_GetObjectFromIP(uint32_t switchNum, uint32_t destIP, uint16_
 	if(LOGGING_SEARCH_LATENCY) {
 		do_gettimeofday(&startTime);
 	}
-	if(LOGGING){
+	if (LOGGING){
 		os_WriteLog6("Searching cache. SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), (uint16_t)0);	}
 	hash_for_each_possible(OBJ_TBL, current_entry, hlist_ip, destIP) {
 		if (current_entry->switchNum == switchNum &&
 			current_entry->destIP == destIP && current_entry->destPort == (uint16_t)0) {
 			*objHash = current_entry->objHash;
 			*pSwitchIP = current_entry->switchIP;
-			if(LOGGING){
+			if (LOGGING){
 				os_WriteLog6("Cache hit! SwitchNum=%u, DestIP=%u.%u.%u.%u, DestPort=%u\n", switchNum, *((uint8_t*)&destIP + 0), *((uint8_t*)&destIP + 1), *((uint8_t*)&destIP + 2), *((uint8_t*)&destIP + 3), (uint16_t)0);
 				os_WriteLog4("ESIP=%u.%u.%u.%u", *((uint8_t*)pSwitchIP + 0), *((uint8_t*)pSwitchIP + 1), *((uint8_t*)pSwitchIP + 2), *((uint8_t*)pSwitchIP + 3));
 				os_WriteLog("ObjID=\n");
@@ -696,13 +700,13 @@ static uint32_t moe_GetOriginIPFromSrcIP(uint32_t switchNum, uint32_t srcIP, uin
 	uint32_t moIP = srcIP;
 
 	if (srcPort != (uint16_t)0 && (srcPort < (uint16_t)32768 || srcPort > (uint16_t)61000)) {
-		if(LOGGING){os_WriteLog6("Searching cache. SwitchNum=%u, SrcIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), srcPort);}
+		if (LOGGING){os_WriteLog6("Searching cache. SwitchNum=%u, SrcIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), srcPort);}
 
 		hash_for_each_possible(OBJ_MOIP_TBL, current_entry, hlist_moip, moIP) {
 			if (current_entry->switchNum == switchNum &&
 				current_entry->moIP == moIP && current_entry->destPort == srcPort) {
 				*originIP = current_entry->destIP;
-				if(LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), srcPort);}
+				if (LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), srcPort);}
 
 				return 1;
 			}
@@ -712,12 +716,12 @@ static uint32_t moe_GetOriginIPFromSrcIP(uint32_t switchNum, uint32_t srcIP, uin
 
 	current_entry = NULL;
 	//destPort == 0
-	if(LOGGING){os_WriteLog6("Searching cache. SwitchNum=%u, SrcIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), (uint32_t)0);}
+	if (LOGGING){os_WriteLog6("Searching cache. SwitchNum=%u, SrcIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), (uint32_t)0);}
 	hash_for_each_possible(OBJ_MOIP_TBL, current_entry, hlist_moip, moIP) {
 		if (current_entry->switchNum == switchNum &&
 			current_entry->moIP == moIP && current_entry->destPort == (uint16_t)0) {
 			*originIP = current_entry->destIP;
-			if(LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), (uint16_t)0);}
+			if (LOGGING){os_WriteLog6("Cache hit! SwitchNum=%u, OriginalIP=%u.%u.%u.%u, SrcPort=%u\n", switchNum, *((uint8_t*)originIP + 0), *((uint8_t*)originIP + 1), *((uint8_t*)originIP + 2), *((uint8_t*)originIP + 3), (uint16_t)0);}
 
 			return 1;
 		}
@@ -730,7 +734,7 @@ static uint32_t moe_GetObjectFromHash(uint32_t switchNum, uint8_t* objHash, uint
 {
 	_OE* current_entry = NULL;
 	int i = 0;
-	if(LOGGING){
+	if (LOGGING){
 		os_WriteLog1("Searching cache. SwitchNum=%u\n", switchNum);
 		os_WriteLog("ObjID=\n");
 
@@ -748,7 +752,7 @@ static uint32_t moe_GetObjectFromHash(uint32_t switchNum, uint8_t* objHash, uint
 			else {
 				*pDestIP = current_entry->moIP;
 			}
-			if(LOGGING){
+			if (LOGGING){
 				os_WriteLog4("Cache hit! OldDestIP=%u.%u.%u.%u\n", *((uint8_t*)pOldDestIP + 0), *((uint8_t*)pOldDestIP + 1), *((uint8_t*)pOldDestIP + 2), *((uint8_t*)pOldDestIP + 3));
 				os_WriteLog5("SwitchNum=%u, DestIP=%u.%u.%u.%u\n", switchNum, *((uint8_t*)pDestIP + 0), *((uint8_t*)pDestIP + 1), *((uint8_t*)pDestIP + 2), *((uint8_t*)pDestIP + 3));
 			}
@@ -761,7 +765,7 @@ static uint32_t moe_GetObjectFromHash(uint32_t switchNum, uint8_t* objHash, uint
 static void moe_DeleteObjectAll(uint32_t switchNum, uint32_t destIP, uint16_t destPort)
 {
 	_OE* current_entry = NULL;
-	if(LOGGING){os_WriteLog("Delete Object\n");}
+	if (LOGGING){os_WriteLog("Delete Object\n");}
 	hash_for_each_possible(OBJ_TBL, current_entry, hlist_ip, destIP) {
 		if (current_entry->switchNum == switchNum &&
 			current_entry->destIP == destIP && current_entry->destPort == destPort) {
@@ -781,7 +785,7 @@ static void moe_DeleteObjectHash(uint32_t switchNum, uint8_t* objHash)
 {
 	_OE* current_entry = NULL;
 
-	if(LOGGING){os_WriteLog("Delete Object Hash\n");}
+	if (LOGGING){os_WriteLog("Delete Object Hash\n");}
 	hash_for_each_possible(OBJ_REV_TBL, current_entry, hlist_hash, *(uint64_t*)objHash) {
 		if (current_entry->switchNum == switchNum && memcmp(current_entry->objHash, objHash, HASH_LEN) == 0) {
 			hash_del(&current_entry->hlist_hash);
@@ -796,7 +800,7 @@ static void moe_DeleteMOIPAll(uint32_t switchNum, uint32_t moIP, uint16_t destPo
 {
 	_OE* current_entry = NULL;
 
-	if(LOGGING){os_WriteLog("Delete MOIP Hash\n");}
+	if (LOGGING){os_WriteLog("Delete MOIP Hash\n");}
 	hash_for_each_possible(OBJ_MOIP_TBL, current_entry, hlist_moip, moIP) {
 		if (current_entry->switchNum == switchNum && current_entry->moIP == moIP && current_entry->destPort == destPort) {
 			hash_del(&current_entry->hlist_moip);
@@ -831,10 +835,10 @@ static void moe_ForwardSKB(uint32_t switchNum, uint32_t destIP)
 			kfree(previous); previous = NULL;
 		}
 		if (entry->switchNum == switchNum && entry->destIP == destIP) {
-			if (moe_CheckHeader(entry->vp, entry->skb, NULL) == -1) {continue;}
-			if(LOGGING){os_WriteLog("Processing packet after handling.");}
+			if (moe_CheckHeader(entry->vp, entry->skb, NULL) == DO_NOT_FORWARD) {continue;}
+			if (LOGGING){os_WriteLog("Processing packet after handling.");}
 			rcu_read_lock();
-            ovs_dp_process_packet2(entry->skb, NULL, DO_FORWARD_AFTER_HANDLING);
+            ovs_dp_process_packet2(entry->skb, NULL, DO_FORWARD_AFTER_HANDLING); 
 			rcu_read_unlock();
 			previous = entry;
 		}
@@ -873,7 +877,7 @@ static void moe_CheckNewUE(const uint8_t switchNum, const uint16_t protocol, uin
 
 	if (senderIP == 0) return;
 	// LOHan: Statistics Support
-	if(LOGGING){
+	if (LOGGING){
 		if (++STAT_NEW_UES[switchNum] == 1000) {
 			os_WriteLog1("SwitchNum=%u, 1K new UEs are connected.\n", switchNum);
 			STAT_NEW_UES[switchNum] = 0;
@@ -917,21 +921,21 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 
 	if(doInsertObjID) {
 
-		if(LOGGING){os_WriteLog("Adding header operation.\n");}
+		if (LOGGING){os_WriteLog("Adding header operation.\n");}
 		if (skb_cow_head(skb, MOE_HLEN) < 0){
-			return -1;
+			return DO_NOT_FORWARD;
 		}
 		
 		
-		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
-		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+		//if (LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		//if (LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 		len = skb->len;
-		//if(LOGGING){os_WriteLog("--0--skb_put().\n");}
+		//if (LOGGING){os_WriteLog("--0--skb_put().\n");}
 		//skb_put(skb, MOE_HLEN);
-        if(LOGGING){os_WriteLog("--0--skb_push().\n");}
+        if (LOGGING){os_WriteLog("--0--skb_push().\n");}
         skb_push(skb, MOE_HLEN);
-		//if(LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
-		//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+		//if (LOGGING){os_WriteLog1("--0--skb_tailroom: %d.\n",skb_tailroom(skb));}
+		//if (LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 
 		/* Move the data to the beginning of the new data position. */
 		//memmove(skb->data + MOE_HLEN + ETH_HLEN + IP_HLEN, skb->data + ETH_HLEN + IP_HLEN, len - ETH_HLEN - IP_HLEN);
@@ -940,22 +944,22 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		data = skb->data + ETH_HLEN;
 		len = 0;
 		
-		if(LOGGING){os_WriteLog("--1--Header extension.\n");}
+		if (LOGGING){os_WriteLog("--1--Header extension.\n");}
 		memcpy(data + 0, (void*)"\x4E", 1);
 		len = ntohs(*(uint16_t*)(data + 2));
-		if(LOGGING){os_WriteLog1("packet length(before)=%d\n",len);}
+		if (LOGGING){os_WriteLog1("packet length(before)=%d\n",len);}
 		len = htons(len + MOE_HLEN);
-		if(LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
+		if (LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
 		memcpy(data + 2, (void*)&len, 2);
 		
 
-		if(LOGGING){os_WriteLog("--2--Changing dst IP.\n");}
+		if (LOGGING){os_WriteLog("--2--Changing dst IP.\n");}
 		memcpy(data + 10, (void*)"\x0000", 2);
 		memcpy(&oldSrcIP, data + 12, sizeof(uint32_t));
 		memcpy(data + 16, (void*)&esIP, sizeof(esIP));
 		changedDstIp = *(uint32_t*)(data + 16);
-		if(LOGGING){os_WriteLog4("Changed packet's destination IP=%u.%u.%u.%u\n",*((uint8_t*)&changedDstIp + 0), *((uint8_t*)&changedDstIp + 1), *((uint8_t*)&changedDstIp + 2), *((uint8_t*)&changedDstIp + 3) );}
-		if(LOGGING){os_WriteLog("--3--Inserting OID.\n");}
+		if (LOGGING){os_WriteLog4("Changed packet's destination IP=%u.%u.%u.%u\n",*((uint8_t*)&changedDstIp + 0), *((uint8_t*)&changedDstIp + 1), *((uint8_t*)&changedDstIp + 2), *((uint8_t*)&changedDstIp + 3) );}
+		if (LOGGING){os_WriteLog("--3--Inserting OID.\n");}
 		memcpy(data + IP_HLEN + 0, (void*)"\x00", 1);
 		memcpy(data + IP_HLEN + 1, (void*)"\x24", 1); // option field length
 		memcpy(data + IP_HLEN + 2, (void*)"\x0000", 2);
@@ -976,13 +980,13 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 					}
 			
 		}*/
-		if(LOGGING){os_WriteLog("--4--Calculating IP checksum.\n");}
+		if (LOGGING){os_WriteLog("--4--Calculating IP checksum.\n");}
 		temp = htons(CalculateIPChecksum(data, IP_HLEN + MOE_HLEN));
 		memcpy(data + 10, (void*)&temp, 2);
-		if(LOGGING){os_WriteLog("--5--Done.\n");}
+		if (LOGGING){os_WriteLog("--5--Done.\n");}
 	}
 	else {
-		if(LOGGING){os_WriteLog("No adding header operation. Just calculate checksum.\n");}
+		if (LOGGING){os_WriteLog("No adding header operation. Just calculate checksum.\n");}
 		data = skb->data + ETH_HLEN;
 
 		memcpy(&oldSrcIP, data + 12, sizeof(uint32_t));
@@ -995,13 +999,13 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 	}
 
 	//tcph_len = (*(uint8_t*)(data + IP_HLEN + MOE_HLEN + 12) & 0xf0) >> 4;
-	//if(LOGGING){print_hex_dump(KERN_ALERT, "data ", DUMP_PREFIX_OFFSET, 16, 1, data + IP_HLEN + MOE_HLEN + (tcph_len*4), ntohs(len) - IP_HLEN - MOE_HLEN - (tcph_len*4), 1);}
+	//if (LOGGING){print_hex_dump(KERN_ALERT, "data ", DUMP_PREFIX_OFFSET, 16, 1, data + IP_HLEN + MOE_HLEN + (tcph_len*4), ntohs(len) - IP_HLEN - MOE_HLEN - (tcph_len*4), 1);}
 
 	if (proto != IPPROTO_ICMP && newSrcIP != oldSrcIP) {
 
 		if (proto == IPPROTO_UDP) {
 			memcpy(&org_tp_check, data + IP_HLEN + MOE_HLEN + 6, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(org_tp_check));}
+			if (LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(org_tp_check));}
 		} // UDP calculates checksum
 
 
@@ -1012,21 +1016,21 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 
 		else if (proto == IPPROTO_TCP) {
 			memcpy(&org_tp_check, data + IP_HLEN + MOE_HLEN + 16, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(org_tp_check));}
+			if (LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(org_tp_check));}
 		} //TCP calculates checksum
 
 		org_tp_check = ~ntohs(org_tp_check);
-		if(LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",org_tp_check);}
+		if (LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",org_tp_check);}
 		newSrcIP = ntohl(newSrcIP);
 		oldSrcIP = ntohl(oldSrcIP);
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("new src ip addr=%08x\n",newSrcIP);
 			os_WriteLog1("old src ip addr=%08x\n",oldSrcIP);
 		}
 
 		pre16 = (uint16_t) ((newSrcIP & 0xffff0000) >> 16);
 		post16 = (uint16_t) (newSrcIP & 0x0000ffff);
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("new src ip preaddr=%04x\n",pre16);
 			os_WriteLog1("new src ip postaddr=%04x\n",post16);
 		}
@@ -1047,7 +1051,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		pre16 = (uint16_t) ((oldSrcIP & 0xffff0000) >> 16);
 		post16 = (uint16_t) (oldSrcIP & 0x0000ffff);
 
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("old src ip preaddr=%04x\n",pre16);
 			os_WriteLog1("old src ip postaddr=%04x\n",post16);
 		}
@@ -1061,11 +1065,11 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
 		}
 
-		if(LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
+		if (LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
 
 		org_tp_check = htons((uint16_t)(~sum));
 
-		if(LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(org_tp_check ));}
+		if (LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(org_tp_check ));}
 
 
 		if (proto == IPPROTO_UDP) {
@@ -1077,7 +1081,7 @@ static int32_t moe_AddHeader(struct sk_buff *skb, uint32_t newSrcIP, uint8_t* ha
 		}
 
 	}
-	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
+	if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
 //Jaehee modified 2017/09/30
@@ -1095,22 +1099,22 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 	uint32_t sum = 0;
 	//int psize = 0;
 	//char *pseudogram = NULL;
-	//if(LOGGING){print_hex_dump(KERN_ALERT, "(pre)skb->data ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, ntohs(*(uint16_t*)(skb->data + 2 + ETH_HLEN))+ETH_HLEN, 1);}
-	//if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
-	//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
-	if(LOGGING){os_WriteLog("Removing header operation.\n");}
+	//if (LOGGING){print_hex_dump(KERN_ALERT, "(pre)skb->data ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, ntohs(*(uint16_t*)(skb->data + 2 + ETH_HLEN))+ETH_HLEN, 1);}
+	//if (LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	//if (LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+	if (LOGGING){os_WriteLog("Removing header operation.\n");}
 	memmove(skb->data + MOE_HLEN, skb->data, ETH_HLEN + IP_HLEN);
 	skb_pull(skb, MOE_HLEN);
-	//if(LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
-	//if(LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
+	//if (LOGGING){os_WriteLog1("--0--skb_headroom: %d.\n",skb_headroom(skb));}
+	//if (LOGGING){os_WriteLog1("--0--skb->len: %d.\n",skb->len);}
 	
 	data = skb->data + ETH_HLEN;
 
 	memcpy(data + 0, (void*)"\x45", 1);
 	len = ntohs(*(uint16_t*)(data + 2));
-	if(LOGGING){os_WriteLog1("packet length(before)=%d\n",len);}
+	if (LOGGING){os_WriteLog1("packet length(before)=%d\n",len);}
 	len = htons(len - MOE_HLEN);
-	if(LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
+	if (LOGGING){os_WriteLog1("packet length(after)=%d\n",ntohs(len));}
 	memcpy(data + 2, (void*)&len, 2);
 
 
@@ -1123,7 +1127,7 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 
 		if (proto == IPPROTO_UDP) {
 			memcpy(&org_tp_check, data + IP_HLEN + 6, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(org_tp_check));}
+			if (LOGGING){os_WriteLog1("original udp checksum=%04x\n",ntohs(org_tp_check));}
 		} // UDP calculates checksum
 
 //		if (proto == IPPROTO_UDP) {
@@ -1132,21 +1136,21 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 //
 		else if (proto == IPPROTO_TCP) {
 			memcpy(&org_tp_check, data + IP_HLEN + 16, sizeof(uint16_t));
-			if(LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(org_tp_check));}
+			if (LOGGING){os_WriteLog1("original tcp checksum=%04x\n",ntohs(org_tp_check));}
 		} // TCP calculates checksum
 
 		org_tp_check = ~ntohs(org_tp_check);
-		if(LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",org_tp_check);}
+		if (LOGGING){os_WriteLog1("tp check 1s cmpl=%04x\n",org_tp_check);}
 		oldIP = ntohl(oldIP);
 		newIP = ntohl(newIP);
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("new dst ip addr=%08x\n",newIP);
 			os_WriteLog1("old dst ip addr=%08x\n",oldIP);
 		}
 
 		pre16 = (uint16_t) ((oldIP & 0xffff0000) >> 16);
 		post16 = (uint16_t) (oldIP & 0x0000ffff);
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("old dst ip preaddr=%04x\n",pre16);
 			os_WriteLog1("old dst ip postaddr=%04x\n",post16);}
 
@@ -1166,7 +1170,7 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 		pre16 = (uint16_t) ((newIP & 0xffff0000) >> 16);
 		post16 = (uint16_t) (newIP & 0x0000ffff);
 
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog1("new dst ip preaddr=%04x\n",pre16);
 			os_WriteLog1("new dst ip postaddr=%04x\n",post16);
 		}
@@ -1180,11 +1184,11 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 			sum = (sum&0xffff) + ((sum&0xffff0000)>>16);
 		}
 
-		if(LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
+		if (LOGGING){os_WriteLog1("new tp check 1s cmpl=%04x\n",sum);}
 
 		org_tp_check = htons((uint16_t)(~sum));
 
-		if(LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(org_tp_check ));}
+		if (LOGGING){os_WriteLog1("new tp checksum=%04x\n",ntohs(org_tp_check ));}
 
 
 		if (proto == IPPROTO_UDP) {
@@ -1197,7 +1201,7 @@ static int32_t moe_RemoveHeader(struct sk_buff *skb, uint32_t oldIP, uint32_t ne
 
 	}
 
-	if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
+	if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD_AFTER_HANDLING;
 }
 
 //Jaehee & Jaehyun modified ---
@@ -1281,7 +1285,7 @@ static uint8_t moe_GetSwitchNum(struct sk_buff* skb)
 			switchNum -= 1; // Real interface number increases from one.
 	}
 	else if (OVS_MODE == OVS_MODE_TESTBED) {
-		if(LOGGING){os_WriteLog6("Switch MAC=%02x:%02x:%02x:%02x:%02x:%02x\n", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);}
+		if (LOGGING){os_WriteLog6("Switch MAC=%02x:%02x:%02x:%02x:%02x:%02x\n", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);}
 		if (addr[0] == 0x20 && addr[1] == 0x00 && addr[2] == 0x00 && addr[3] == 0x00)
 			return (uint8_t)(addr[4]+1);
 	}
@@ -1325,22 +1329,22 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 	if (LOGGING){os_WriteLog("A new packet.\n");}
 	switchNum = moe_GetSwitchNum(skb);
-	if (switchNum > SWITCH_NUMS) {if(LOGGING){os_WriteLog("switchNum is over. Forwarding.");} return DO_FORWARD;}
+	if (switchNum > SWITCH_NUMS) {if (LOGGING){os_WriteLog("switchNum is over. Forwarding.");} return DO_FORWARD;}
 	switchType = SW_TYPES[switchNum-1];
-	if (switchType != SWITCHTYPE_ES) {if(LOGGING){os_WriteLog("switchType is IMS. Forwarding.");} return DO_FORWARD;}
+	if (switchType != SWITCHTYPE_ES) {if (LOGGING){os_WriteLog("switchType is IMS. Forwarding.");} return DO_FORWARD;}
 
 	data = skb->data;
 
-	if(LOGGING){os_WriteLog4("Received data mac header=%02x:%02x:%02x:%02x:xx:xx.\n",data[ETH_ALEN+0],data[ETH_ALEN+1],data[ETH_ALEN+2],data[ETH_ALEN+3]);}
+	if (LOGGING){os_WriteLog4("Received data mac header=%02x:%02x:%02x:%02x:xx:xx.\n",data[ETH_ALEN+0],data[ETH_ALEN+1],data[ETH_ALEN+2],data[ETH_ALEN+3]);}
 	if (data[ETH_ALEN+0] == 0x10 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x50 && data[ETH_ALEN+1] == 0x3e && data[ETH_ALEN+2] == 0xaa ) {senderType = SENDERTYPE_UE;}
 	if (data[ETH_ALEN+0] == 0x20 && data[ETH_ALEN+1] == 0x00 && data[ETH_ALEN+2] == 0x00 && data[ETH_ALEN+3] == 0x00) {senderType = SENDERTYPE_SW;}
-	if (senderType == SENDERTYPE_NONE) {if(LOGGING){os_WriteLog("senderType is NONE. Forwarding.");} return DO_FORWARD;}
+	if (senderType == SENDERTYPE_NONE) {if (LOGGING){os_WriteLog("senderType is NONE. Forwarding.");} return DO_FORWARD;}
 
 
 	 
 	protocol = ntohs(*(uint16_t*)(data + ETH_ALEN*2));
-	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+	if (protocol != ETH_P_IP && protocol != ETH_P_ARP) {if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 	/*
 	if (senderType == SENDERTYPE_UE) {
@@ -1351,18 +1355,18 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 		
 		else {
-			if(LOGGING){os_WriteLog("Neither red nor blue. Forwarding.");} return DO_FORWARD;
+			if (LOGGING){os_WriteLog("Neither red nor blue. Forwarding.");} return DO_FORWARD;
 		}
 		
-		if(LOGGING){os_WriteLog("Either red or blue. Check new UE.");}
+		if (LOGGING){os_WriteLog("Either red or blue. Check new UE.");}
 	}*/
 
 	data += ETH_HLEN;
 
 	if (protocol == ETH_P_ARP && senderType == SENDERTYPE_UE) {
-		if(LOGGING){os_WriteLog("ARP of new UE. Check new UE.\n");}
+		if (LOGGING){os_WriteLog("ARP of new UE. Check new UE.\n");}
 		moe_CheckNewUE(switchNum, protocol, data);
-		if(LOGGING){os_WriteLog("Forwarding.");}
+		if (LOGGING){os_WriteLog("Forwarding.");}
 		return DO_FORWARD;
 	}
 	
@@ -1370,7 +1374,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 
 	else if (protocol == ETH_P_IP) {
 		IHL = *(uint8_t*)data;           // Do not use 'ntohl'
-		if (IHL != 0x45 && IHL != 0x4E) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;} //4B(SHA1) -> 4E(SHA256)
+		if (IHL != 0x45 && IHL != 0x4E) {if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;} //4B(SHA1) -> 4E(SHA256)
 		srcIP = *(uint32_t*)(data + 12);	// Do not use 'ntohl'
 		ptrSrcIP = (uint32_t*)(data + 12);
 
@@ -1389,11 +1393,11 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 		
 		 if (1==dstIPisSWIP) {
-			 if(LOGGING){os_WriteLog("Destination IP is switch IP.");}
+			 if (LOGGING){os_WriteLog("Destination IP is switch IP.");}
 		 }
 		
 		if (senderType==SENDERTYPE_UE && 0==dstIPisSWIP) {
-			if(LOGGING){
+			if (LOGGING){
 				os_WriteLog3("Check header. Switch num=%u, type=%u, Sender type=%u\n", switchNum, switchType, senderType);
 				os_WriteLog8("New packet. Source IP=%u.%u.%u.%u, Destination IP=%u.%u.%u.%u\n",
 							 *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
@@ -1401,7 +1405,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				os_WriteLog4("Value of source IP pointer=%u.%u.%u.%u\n", *((uint8_t*)ptrSrcIP + 0),*((uint8_t*)ptrSrcIP + 1),*((uint8_t*)ptrSrcIP + 2),*((uint8_t*)ptrSrcIP + 3));
 			}
 		} else if (1==dstIPisSWIP) {
-			if(LOGGING){
+			if (LOGGING){
 				os_WriteLog8("Check header. Source IP=%u.%u.%u.%u, Destination SWIP=%u.%u.%u.%u\n",*((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 			}
@@ -1409,7 +1413,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		
 		
 		
-		if (dstIP == 0 || dstIP == 0xFFFFFFFF) {if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
+		if (dstIP == 0 || dstIP == 0xFFFFFFFF) {if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;}
 
 		totalLen = ntohs(*(uint16_t*)(data + 2));
 		tp_protocol = *(data + 9);
@@ -1426,7 +1430,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		if (tp_protocol == IPPROTO_ICMP){
 			
 			
-			if(LOGGING){
+			if (LOGGING){
 				os_WriteLog8("ICMP packet check header. Source IP=%u.%u.%u.%u, Destination IP=%u.%u.%u.%u\n",*((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 							 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 			}
@@ -1448,33 +1452,38 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				//ipc_SendMessage(switchNum, OPCODE_INFORM_CONNECTION, srcIP, data + 8); // 170327 Jaehee
 
 				if (srcIP != 16777343 && srcIP != SWITCHS_IP[switchNum-1] && moe_GetOriginIPFromSrcIP(switchNum, srcIP, 0, &hashed, &originalIP)) {
-					if(LOGGING){os_WriteLog("Changing src IP operation.\n");}
+					if (LOGGING){os_WriteLog("Changing src IP operation.\n");}
 					memcpy(ptrSrcIP,&originalIP,sizeof(uint32_t));
-					if(LOGGING){os_WriteLog9("ICMP, Switch num=%u, SrcIP=%u.%u.%u.%u, Original IP=%u.%u.%u.%u\n", switchNum,
+					if (LOGGING){os_WriteLog9("ICMP, Switch num=%u, SrcIP=%u.%u.%u.%u, Original IP=%u.%u.%u.%u\n", switchNum,
 											 *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 											 *((uint8_t*)&originalIP + 0), *((uint8_t*)&originalIP + 1), *((uint8_t*)&originalIP + 2), *((uint8_t*)&originalIP + 3));}
 
 				}
 
-				if (0==dstIPisSWIP){ 
+				if (0 == dstIPisSWIP){
 					if(!moe_GetObjectFromIP(switchNum, dstIP, 0, &hashed, &newIP)) { // If it doesn't exist,
 						dstPortByteArr[1] = 0;
 						dstPortByteArr[0] = 0;
 						// Send a request message to the upper layer
 						ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
-						moe_SaveSKB(switchNum, dstIP, vp, skb);
-						if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+
+						// Buffer a packet
+						/*moe_SaveSKB(switchNum, dstIP, vp, skb);
+						if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+
+						// Do not buffer a packet
+                        return DO_FORWARD;
 					}
 				}
-				if(LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
+				if (LOGGING){os_WriteLog9("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 
 				if (newIP == SWITCHS_IP[switchNum-1]) { 
-					if(LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
+					if (LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-					if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+					if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
 				}
 					
 				if (newIP == 0) {
@@ -1489,7 +1498,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// Ignore ICMP Packet 
 			// --------------------------------------------------------------------------------
 			if (IHL == 0x45) {
-				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 				
 			}
 			
@@ -1502,14 +1511,18 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				if (!moe_GetObjectFromHash(switchNum, hashed, &oldIP, &newIP)) { // If it doesn't exist,
 					// Send a request message to the upper layer
 					ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
-					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+					// Buffer a packet
+					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+
+                    // Do not buffer a packet
+                    return DO_FORWARD;
 				}
-				if(LOGGING){os_WriteLog9("Switch num=%u, Received IP=%u.%u.%u.%u, Host IP=%u.%u.%u.%u\n", switchNum,
+				if (LOGGING){os_WriteLog9("Switch num=%u, Received IP=%u.%u.%u.%u, Host IP=%u.%u.%u.%u\n", switchNum,
 										 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3),
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 				if (newIP == 0) {
-					if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+					if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 				}
 
 				return moe_RemoveHeader(skb, oldIP, newIP, IPPROTO_ICMP);
@@ -1530,15 +1543,15 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_TCP && totalLen == 246 && srcPort == 4001 && dstPort == 14999) {
-			if(LOGGING){os_WriteLog("New UE.\n");}
+			if (LOGGING){os_WriteLog("New UE.\n");}
 			moe_CheckNewUE(switchNum, protocol, data);
-			if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+			if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 		}
 		
 		if (senderType == SENDERTYPE_UE && tp_protocol == IPPROTO_UDP && (dstPort == 67 || dstPort == 68)) { //DHCP ports
-			if(LOGGING){os_WriteLog("DHCP of new UE. Do nothing.\n");}
+			if (LOGGING){os_WriteLog("DHCP of new UE. Do nothing.\n");}
 			//moe_CheckNewUE(switchNum, protocol, data);
-			if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+			if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 
 		}
 		
@@ -1549,25 +1562,25 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		// --------------------------------------------------------------------------------
 		// Sender exists in subnet
 		// --------------------------------------------------------------------------------
-		if(LOGGING){
+		if (LOGGING){
 			os_WriteLog8("IP packet check header. Source IP=%u.%u.%u.%u, Destination SWIP=%u.%u.%u.%u\n",*((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3),
 						 *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3));
 		}
 
 
-		if ((senderType == SENDERTYPE_UE && IHL == 0x45) || (senderType == SENDERTYPE_SW && IHL == 0x45 && 0==dstIPisSWIP))  {
+		if ((senderType == SENDERTYPE_UE && IHL == 0x45) || (senderType == SENDERTYPE_SW && IHL == 0x45 && 0 == dstIPisSWIP))  {
 			hashed = NULL;
 			// Check entry in order to append an MoE header
 			/*if (!moe_GetObjectFromIP(switchNum, dstIP, 0, &hashed, &newIP)) { // If it doesn't exist,
 				// Send a request message to the upper layer
 				ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, 0);
 				moe_SaveSKB(switchNum, dstIP, vp, skb);
-				if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+				if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
 			}*/
 			if (srcIP != 16777343 && srcIP != SWITCHS_IP[switchNum-1] && moe_GetOriginIPFromSrcIP(switchNum, srcIP, srcPort, &hashed, &originalIP)) {
-				if(LOGGING){os_WriteLog("Changing src IP operation.\n");}
+				if (LOGGING){os_WriteLog("Changing src IP operation.\n");}
 				memcpy(ptrSrcIP,&originalIP,sizeof(uint32_t));
-				if(LOGGING){os_WriteLog10("Switch num=%u, SrcIP=%u.%u.%u.%u, srcPort=%u, Original IP=%u.%u.%u.%u\n", switchNum,
+				if (LOGGING){os_WriteLog10("Switch num=%u, SrcIP=%u.%u.%u.%u, srcPort=%u, Original IP=%u.%u.%u.%u\n", switchNum,
 										  *((uint8_t*)&srcIP + 0), *((uint8_t*)&srcIP + 1), *((uint8_t*)&srcIP + 2), *((uint8_t*)&srcIP + 3), srcPort,
 										  *((uint8_t*)&originalIP + 0), *((uint8_t*)&originalIP + 1), *((uint8_t*)&originalIP + 2), *((uint8_t*)&originalIP + 3));}
 
@@ -1577,22 +1590,30 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 				//not 127.0.0.1 and not this switch's ip
 				dstPortByteArr[1] = dstPort & 0xff;
 				dstPortByteArr[0] = ((dstPort >> 8) & 0xff);
-				if(LOGGING){os_WriteLog1("cache does not have 'port number' of dest = %u.\n", dstPort);}
+				if (LOGGING){os_WriteLog1("cache does not have 'port number' of dest = %u.\n", dstPort);}
 				// Send a request message to the upper layer
 				if (dstPort > 61000 || dstPort < 32768) {
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
-					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+					// Buffer a packet
+					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+
+                    // Do not buffer a packet
+                    return DO_FORWARD;
 				} else {
 					dstPortByteArr[0] = 0;
 					dstPortByteArr[1] = 0;
 					ipc_SendMessage(switchNum, OPCODE_GET_HASH, dstIP, dstPortByteArr);
-					moe_SaveSKB(switchNum, dstIP, vp, skb);
-					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+					// Buffer a packet
+					/*moe_SaveSKB(switchNum, dstIP, vp, skb);
+					if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+
+					// Do not buffer a packet
+                    return DO_FORWARD;
 				}
 				// 170327 Jaehee
 			}
-			if(LOGGING){os_WriteLog10("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, dstPort=%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
+			if (LOGGING){os_WriteLog10("Switch num=%u, Packet's original destination IP=%u.%u.%u.%u, dstPort=%u, New IP in the cache=%u.%u.%u.%u\n", switchNum,
 									  *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3), dstPort,
 									  *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));}
 
@@ -1601,10 +1622,10 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			} // this packet is fragmented
 
 			if (newIP == SWITCHS_IP[switchNum-1]) { 
-				if(LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
+				if (LOGGING){os_WriteLog8("No adding header, because new IP in the cache=%u.%u.%u.%u equals to this switch IP=%u.%u.%u.%u\n", 
 										 *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3),
 										 *((uint8_t*)&SWITCHS_IP[switchNum-1] + 0), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 1), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 2), *((uint8_t*)&SWITCHS_IP[switchNum-1] + 3));}
-				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
+				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD; // newIP (ESIP) equals to this switch IP.
 			}
 			
 			if (newIP == 0) {
@@ -1617,34 +1638,39 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 			// --------------------------------------------------------------------------------
 			// Header Removal Operation
 			// --------------------------------------------------------------------------------
-		else if (senderType == SENDERTYPE_SW && IHL == 0x4E && 1==dstIPisSWIP) {
+		else if (senderType == SENDERTYPE_SW && IHL == 0x4E && 1 == dstIPisSWIP) {
 
 			hashed = data + IP_HLEN + 4;
 			if (!moe_GetObjectFromHash(switchNum, hashed, &oldIP, &newIP)) { // If it doesn't exist,
 				// Send a request message to the upper layer
 				ipc_SendMessage(switchNum, OPCODE_GET_IP, dstIP, hashed);
-				moe_SaveSKB(switchNum, dstIP, vp, skb);
-				if(LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;
+
+				// Buffer a packet
+				/*moe_SaveSKB(switchNum, dstIP, vp, skb);
+				if (LOGGING){os_WriteLog("Not forwarding, buffering.");}  return DO_NOT_FORWARD;*/
+
+                // Do not buffer a packet
+                return DO_FORWARD;
 			}
-			if(LOGGING){os_WriteLog10("Switch num=%u, Received IP=%u.%u.%u.%u, dstPort=%u, Host IP=%u.%u.%u.%u\n", switchNum,
+			if (LOGGING){os_WriteLog10("Switch num=%u, Received IP=%u.%u.%u.%u, dstPort=%u, Host IP=%u.%u.%u.%u\n", switchNum,
 									  *((uint8_t*)&dstIP + 0), *((uint8_t*)&dstIP + 1), *((uint8_t*)&dstIP + 2), *((uint8_t*)&dstIP + 3), dstPort,
 									  *((uint8_t*)&newIP + 0), *((uint8_t*)&newIP + 1), *((uint8_t*)&newIP + 2), *((uint8_t*)&newIP + 3));
 				os_WriteLog4("Old IP=%u.%u.%u.%u\n", *((uint8_t*)&oldIP + 0), *((uint8_t*)&oldIP + 1), *((uint8_t*)&oldIP + 2), *((uint8_t*)&oldIP + 3));}
 			if (newIP == 0) {
 				
-				if(LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
+				if (LOGGING){os_WriteLog("Forwarding.");} return DO_FORWARD;
 			}
 
 			/*
 			if (tp_protocol == IPPROTO_UDP) {
-				if(LOGGING){os_WriteLog("received udp segment\n");}
+				if (LOGGING){os_WriteLog("received udp segment\n");}
 				*(uint16_t*)(data + IP_HLEN + MOE_HLEN + 6) = (uint16_t)0;
 
 				uint16_t udp_check = CalculateUDPChecksum(srcIP, newIP, srcPort, dstPort,
 					data + IP_HLEN + MOE_HLEN , ntohs(*(uint16_t*)(data + IP_HLEN + MOE_HLEN + 4)) );
 
 				memcpy(data + IP_HLEN + MOE_HLEN + 6, (void*)&udp_check, sizeof(udp_check));
-				if(LOGGING){os_WriteLog1("udp checksum=%x\n",udp_check);}
+				if (LOGGING){os_WriteLog1("udp checksum=%x\n",udp_check);}
 
 			} */
 			if (frag == 0x20) {
@@ -1655,7 +1681,7 @@ static int32_t moe_CheckHeader(struct vport *vp, struct sk_buff *skb, struct sw_
 		}
 	}
 
-	if(LOGGING){os_WriteLog("Forwarding.");} 
+	if (LOGGING){os_WriteLog("Forwarding.");} 
     return DO_FORWARD;
 }
 
@@ -1728,7 +1754,7 @@ skip_ip6_tunnel_init:
 	hash_init(OBJ_TBL);
 	hash_init(OBJ_MOIP_TBL);
 	hash_init(OBJ_REV_TBL);
-	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.2, LOGGING= %d --- \n",LOGGING);
+	os_WriteLog1("--- OvS with LM-MEC has successfully been loaded. v2.0.3, LOGGING= %d --- \n",LOGGING);
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) SW_TYPES[i] = SWITCHTYPE_IMS;}
 	{int i; for (i = 0; i < SWITCH_NUMS; i++) { STAT_TIMES[i].tv_sec = STAT_TIMES[i].tv_usec = 0; STAT_NEW_UES[i] = 0; }}
 	ipc_SendMessage(0, OPCODE_BOOTUP, 0, NULL);
@@ -2211,11 +2237,11 @@ int ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
 	operation = moe_CheckHeader(vport, skb, &key);
 	if (operation == DO_NOT_FORWARD) {return;}
 	else if (operation == DO_FORWARD) {
-		if(LOGGING){os_WriteLog("Processing packet.");}
+		if (LOGGING){os_WriteLog("Processing packet.");}
 		ovs_dp_process_packet(skb, &key);
 	}
 	else if (operation == DO_FORWARD_AFTER_HANDLING) {
-		if(LOGGING){os_WriteLog("Processing packet after handling.");}
+		if (LOGGING){os_WriteLog("Processing packet after handling.");}
 		ovs_dp_process_packet2(skb, &key, DO_FORWARD_AFTER_HANDLING);
 	}
 		
