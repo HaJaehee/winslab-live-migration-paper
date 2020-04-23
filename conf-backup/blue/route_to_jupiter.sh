@@ -9,6 +9,6 @@ arp -i wlan0 -d 10.0.20.1
 arp -i wlan1 -s 10.0.10.1 20:00:00:00:00:10
 arp -i wlan1 -s 10.0.20.1 20:00:00:00:00:10
 
-arping -w 0.05 -c 20 -f -I wlan1 10.16.1.1
+arping -w 0.05 -c 4 -I wlan1 10.16.1.1
 
 
