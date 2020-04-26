@@ -35,7 +35,19 @@ auto wlan0
     netmask 255.0.0.0
     hwaddress ether 20:00:00:00:00:10
    
+auto wlan1
+    allow-hotplog wlan1
+    iface wlan1 inet static 
+    address 10.16.2.1
+    netmask 255.0.0.0
+    hwaddress ether 20:00:00:00:00:11
 
+auto wlan2
+    allow-hotplog wlan2
+    iface wlan0 inet static 
+    address 10.16.3.1
+    netmask 255.0.0.0
+    hwaddress ether 20:00:00:00:00:12
 #auto br0
 #    iface br0 inet static
 #    address 10.16.0.1
