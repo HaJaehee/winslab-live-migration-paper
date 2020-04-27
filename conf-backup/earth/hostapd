@@ -21,4 +21,3 @@
 
 RUN_DAEMON="yes"
 DAEMON_CONF="/etc/hostapd/hostapd.conf /etc/hostapd/hostapd2.conf"
-#   /etc/hostapd/hostapd2.conf"
