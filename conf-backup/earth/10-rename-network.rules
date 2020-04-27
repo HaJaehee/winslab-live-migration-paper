@@ -1,3 +1,3 @@
 SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:1e:e5:e5:72:05", NAME="wlan0"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="50:3e:aa:a5:d5:ed", NAME="wlan1"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="50:3e:aa:ac:c9:81", NAME="wlan2"
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="50:3e:aa:ac:c9:81", NAME="wlan1"
+#SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="50:3e:aa:a5:d5:ed", NAME="wlan2"
