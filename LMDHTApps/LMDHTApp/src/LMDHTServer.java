@@ -138,7 +138,9 @@ public final class LMDHTServer {
 
         //clientCh = bClient.bind(0).sync().channel();
 
-
+        // This port number is used for an UDP socket server.
+        // LMDHTServerHandler extends SimpleChannelInboundHandler which is used for an UDP socket server.
+        // LMDHTServerHandler communicates with its OvS kernel module.
         PORT = 10001 + nodeIndex;
 
         Bootstrap b = new Bootstrap();
@@ -201,7 +203,7 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         } else {
             sendBuf[5] = (byte)0;
         }
-        //appends edge switch numbers to byte array
+        //Appends edge switch numbers to the byte array
         for (int i = 0; i < LMDHTServer.swCount; i++) {
             if (LMDHTServer.edgeSWList[i] != 0) {
                 byte[] swBytes = ByteBuffer.allocate(2).putShort((short) (LMDHTServer.edgeSWList[i] - 1)).array();
