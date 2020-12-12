@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="caa86ac0-87a4-4f16-8a90-029deaaa504c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../../LMDHTApps/LMDHTApp/src/LMDHTServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../LMDHTApps/LMDHTApp/src/LMDHTServer.java" afterDir="false" />
-    </list>
+    <list default="true" id="caa86ac0-87a4-4f16-8a90-029deaaa504c" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/classes/" />
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,16 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/MPLDHTServer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="329">
-              <caret line="153" column="39" lean-forward="true" selection-start-line="153" selection-start-column="39" selection-end-line="153" selection-end-column="39" />
-              <folding>
-                <element signature="e#8777#8778#0" expanded="true" />
-                <element signature="e#8831#8832#0" expanded="true" />
-                <element signature="e#30186#30187#0" expanded="true" />
-                <element signature="e#30213#30214#0" expanded="true" />
-                <element signature="e#37854#42773#0" expanded="true" />
-                <element signature="e#42772#42773#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-4246">
+              <caret line="153" column="39" selection-start-line="153" selection-start-column="39" selection-end-line="153" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -81,7 +71,7 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-8" />
+    <option name="x" value="1770" />
     <option name="y" value="-8" />
     <option name="width" value="1936" />
     <option name="height" value="1056" />
@@ -91,11 +81,7 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="ProjectPane" />
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
@@ -149,14 +135,15 @@
       <workItem from="1584076122537" duration="8940000" />
       <workItem from="1587626905662" duration="603000" />
       <workItem from="1607668897761" duration="3528000" />
+      <workItem from="1607779062498" duration="233000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13071000" />
+    <option name="totallyTimeSpent" value="13304000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.2553305" />
       <window_info id="Image Layers" order="1" />
@@ -164,7 +151,7 @@
       <window_info id="UI Designer" order="3" />
       <window_info id="Capture Tool" order="4" />
       <window_info id="Favorites" order="5" side_tool="true" />
-      <window_info active="true" id="Structure" order="6" visible="true" weight="0.25" />
+      <window_info active="true" id="Structure" order="6" visible="true" weight="0.25266525" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.329718" />
@@ -204,16 +191,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/MPLDHTServer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="329">
-          <caret line="153" column="39" lean-forward="true" selection-start-line="153" selection-start-column="39" selection-end-line="153" selection-end-column="39" />
-          <folding>
-            <element signature="e#8777#8778#0" expanded="true" />
-            <element signature="e#8831#8832#0" expanded="true" />
-            <element signature="e#30186#30187#0" expanded="true" />
-            <element signature="e#30213#30214#0" expanded="true" />
-            <element signature="e#37854#42773#0" expanded="true" />
-            <element signature="e#42772#42773#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="-4246">
+          <caret line="153" column="39" selection-start-line="153" selection-start-column="39" selection-end-line="153" selection-end-column="39" />
         </state>
       </provider>
     </entry>

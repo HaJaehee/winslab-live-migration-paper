@@ -383,6 +383,8 @@ class LMDHTServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 				}
 				System.out.println();
 			}
+
+			// Update the cache of the edges in the edge list.
 			for (int i = 0;i < LMDHTServer.swCount;i++){
 				if (LMDHTServer.edgeSWList[i] != 0 && LMDHTServer.edgeSWList[i] != switchNum){
 
