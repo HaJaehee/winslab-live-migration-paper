@@ -1,1 +1,10 @@
-/MoEClient.class
+/build-client.sh
+/countMigrateTime.sh
+/log.log
+/log2.log
+/mobilitySignal.sh
+/mypackage/
+/restoreCommand.sh
+/restoreTime.sh
+/run-client.sh
+/run-udp.sh

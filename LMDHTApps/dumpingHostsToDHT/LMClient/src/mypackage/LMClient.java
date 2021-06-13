@@ -1,3 +1,5 @@
+package mypackage;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -20,8 +22,8 @@ public class LMClient {
 	
 	public static void main(String[] args){
 		
-		String hostname = "10.0.20.1";
-		int port = 10002;
+		String hostname = "127.0.0.1";
+		int port = 30002;
 
 		
 		try{
@@ -46,10 +48,11 @@ public class LMClient {
 //			String strInput = opCode+swNum+esIP+hash;
 			
 			
-//			String opCode = OPCODE_GET_HASH;
-//			String swNum = "02";
-//			String hostIP = "0a000a03";
-//			String strInput = opCode+swNum+hostIP;
+			String opCode = OPCODE_GET_HASH;
+			String swNum = "02";
+			String hostIP = "0a000a02";
+			String portNumber = "0000";
+			String strInput = opCode+swNum+hostIP+portNumber;
 			
 //			String opCode = OPCODE_INFORM_CONNECTION;
 //			String swNum = "02";
@@ -57,14 +60,14 @@ public class LMClient {
 //			String swIP = "0a000a01";
 //			String strInput = opCode+swNum+hostIP+swIP;
 //			
-			String opCode = OPCODE_APP_MOBILITY;
-			String swNum = "02";
-			String originalHostIP = "0a000a02"; 
-			//String portNumber = "1389";
-			String portNumber = "0000";			
-			String esIP = "0a000a01";
-			String newHostIP = "0a000a02";
-			String strInput = opCode+swNum+originalHostIP+portNumber+esIP+newHostIP;
+//			String opCode = OPCODE_APP_MOBILITY;
+//			String swNum = "02";
+//			String originalHostIP = "0a000a02"; 
+//			//String portNumber = "1389";
+//			String portNumber = "0000";			
+//			String esIP = "0a000a01";
+//			String newHostIP = "0a000a02";
+//			String strInput = opCode+swNum+originalHostIP+portNumber+esIP+newHostIP;
 			
 			
 //			String opCode = OPCODE_GET_IPPORT;
