@@ -1,4 +1,4 @@
-package mypackage;
+
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -22,8 +22,8 @@ public class LMClient {
 	
 	public static void main(String[] args){
 		
-		String hostname = "127.0.0.1";
-		int port = 30002;
+		String hostname = "192.168.1.95";
+		int port = 40204;
 
 		
 		try{
