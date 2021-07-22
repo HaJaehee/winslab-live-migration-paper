@@ -25,7 +25,7 @@ public class LMClient {
 	public static void main(String[] args) throws NumberFormatException{
 		
 		String hostname = "192.168.0.4";
-		int port = 40108;
+		int port = 40008;
 
 		
 		try{
@@ -63,9 +63,11 @@ public class LMClient {
 //			String strInput = opCode+swNum+hostIP+swIP;
 			
 			String opCode = OPCODE_DUMP_MOBIL_INFO;
-			String swNum = "02";
+			String swNum = "00";
+			if (args.length == 1) {
+				swNum = String.format("%02x", Integer.parseInt(args[0])); 
+			}
 			String [] hostnameSplit = hostname.split("\\.");
-			
 			String hostIP = String.format("%2s",new BigInteger(hostnameSplit[0],10).toString(16)).replaceAll(" ", "0")  +
 					String.format("%2s",new BigInteger(hostnameSplit[1]).toString(16)).replaceAll(" ", "0") +
 					String.format("%2s",new BigInteger(hostnameSplit[2]).toString(16)).replaceAll(" ", "0") +
