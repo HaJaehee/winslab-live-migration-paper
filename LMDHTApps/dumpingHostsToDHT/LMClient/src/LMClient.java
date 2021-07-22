@@ -1,6 +1,7 @@
 
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -19,11 +20,12 @@ public class LMClient {
     public static final String OPCODE_CTN_MOBILITY = "05";
     public static final String OPCODE_GET_IPPORT = "06";
     public static final String OPCODE_TOGGLE_LOGGING = "65";
+    public static final String OPCODE_DUMP_MOBIL_INFO = "66";
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws NumberFormatException{
 		
-		String hostname = "192.168.1.95";
-		int port = 40204;
+		String hostname = "192.168.0.4";
+		int port = 40108;
 
 		
 		try{
@@ -48,18 +50,29 @@ public class LMClient {
 //			String strInput = opCode+swNum+esIP+hash;
 			
 			
-			String opCode = OPCODE_GET_HASH;
-			String swNum = "02";
-			String hostIP = "0a000a02";
-			String portNumber = "0000";
-			String strInput = opCode+swNum+hostIP+portNumber;
+//			String opCode = OPCODE_GET_HASH;
+//			String swNum = "02";
+//			String hostIP = "0a000a02";
+//			String portNumber = "0000";
+//			String strInput = opCode+swNum+hostIP+portNumber;
 			
 //			String opCode = OPCODE_INFORM_CONNECTION;
 //			String swNum = "02";
 //			String hostIP = "0a000a02";
 //			String swIP = "0a000a01";
 //			String strInput = opCode+swNum+hostIP+swIP;
-//			
+			
+			String opCode = OPCODE_DUMP_MOBIL_INFO;
+			String swNum = "02";
+			String [] hostnameSplit = hostname.split("\\.");
+			
+			String hostIP = String.format("%2s",new BigInteger(hostnameSplit[0],10).toString(16)).replaceAll(" ", "0")  +
+					String.format("%2s",new BigInteger(hostnameSplit[1]).toString(16)).replaceAll(" ", "0") +
+					String.format("%2s",new BigInteger(hostnameSplit[2]).toString(16)).replaceAll(" ", "0") +
+					String.format("%2s",new BigInteger(hostnameSplit[3]).toString(16)).replaceAll(" ", "0");
+			System.out.println(hostIP);
+			String strInput = opCode+swNum+hostIP;
+			
 //			String opCode = OPCODE_APP_MOBILITY;
 //			String swNum = "02";
 //			String originalHostIP = "0a000a02"; 
