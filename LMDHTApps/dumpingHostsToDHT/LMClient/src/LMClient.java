@@ -67,18 +67,30 @@ public class LMClient {
 //			String swIP = "0a000a01";
 //			String strInput = opCode+swNum+hostIP+swIP;
 			
-			String opCode = OPCODE_DUMP_MOBIL_INFO;
-			String swNum = "00";
-			if (args.length == 3) {
-				swNum = String.format("%02x", Integer.parseInt(args[2])); 
-			}
-			String [] hostnameSplit = hostname.split("\\.");
-			String hostIP = String.format("%2s",new BigInteger(hostnameSplit[0],10).toString(16)).replaceAll(" ", "0")  +
-					String.format("%2s",new BigInteger(hostnameSplit[1]).toString(16)).replaceAll(" ", "0") +
-					String.format("%2s",new BigInteger(hostnameSplit[2]).toString(16)).replaceAll(" ", "0") +
-					String.format("%2s",new BigInteger(hostnameSplit[3]).toString(16)).replaceAll(" ", "0");
-			System.out.println(hostIP);
-			String strInput = opCode+swNum+hostIP;
+			String opCode = OPCODE_GET_HASH;
+			String swNum = "02";
+			String hostIP = "c0a80010";
+			String portNumber = "0000";
+			String strInput = opCode+swNum+hostIP+portNumber;
+			
+//			String opCode = OPCODE_INFORM_CONNECTION;
+//			String swNum = "02";
+//			String hostIP = "c0a80010";
+//			String swIP = "0a000a01";
+//			String strInput = opCode+swNum+hostIP+swIP;
+			
+//			String opCode = OPCODE_DUMP_MOBIL_INFO;
+//			String swNum = "00";
+//			if (args.length == 3) {
+//				swNum = String.format("%02x", Integer.parseInt(args[2])); 
+//			}
+//			String [] hostnameSplit = hostname.split("\\.");
+//			String hostIP = String.format("%2s",new BigInteger(hostnameSplit[0],10).toString(16)).replaceAll(" ", "0")  +
+//					String.format("%2s",new BigInteger(hostnameSplit[1]).toString(16)).replaceAll(" ", "0") +
+//					String.format("%2s",new BigInteger(hostnameSplit[2]).toString(16)).replaceAll(" ", "0") +
+//					String.format("%2s",new BigInteger(hostnameSplit[3]).toString(16)).replaceAll(" ", "0");
+//			System.out.println(hostIP);
+//			String strInput = opCode+swNum+hostIP;
 			
 //			String opCode = OPCODE_APP_MOBILITY;
 //			String swNum = "02";
