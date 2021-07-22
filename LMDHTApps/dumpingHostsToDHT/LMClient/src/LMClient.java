@@ -26,6 +26,11 @@ public class LMClient {
 		
 		String hostname = "192.168.0.4";
 		int port = 40008;
+		
+		if (args.length == 3) {
+			hostname = args[0];
+			port = Integer.parseInt(args[1]);
+		}
 
 		
 		try{
@@ -64,8 +69,8 @@ public class LMClient {
 			
 			String opCode = OPCODE_DUMP_MOBIL_INFO;
 			String swNum = "00";
-			if (args.length == 1) {
-				swNum = String.format("%02x", Integer.parseInt(args[0])); 
+			if (args.length == 3) {
+				swNum = String.format("%02x", Integer.parseInt(args[2])); 
 			}
 			String [] hostnameSplit = hostname.split("\\.");
 			String hostIP = String.format("%2s",new BigInteger(hostnameSplit[0],10).toString(16)).replaceAll(" ", "0")  +
