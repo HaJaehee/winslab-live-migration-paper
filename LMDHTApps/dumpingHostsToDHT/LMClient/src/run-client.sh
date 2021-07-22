@@ -1,2 +1,2 @@
 #!/bin/bash
-java -cp .:../* LMClient
+java -cp .:../* LMClient $1 $2 $3
